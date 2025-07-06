@@ -1,0 +1,257 @@
+{% extends 'annotation/base.html' %}
+
+{% block title %}Statistics - Medical Data Annotation Tool{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-chart-bar"></i> Annotation Statistics</h1>
+            <a href="{% url 'annotation_list' %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Back to Annotations
+            </a>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center bg-primary text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-database"></i></h2>
+                        <h3>{{ total_annotations }}</h3>
+                        <p class="mb-0">Total Annotations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-check-circle"></i></h2>
+                        <h3>{{ validated_annotations }}</h3>
+                        <p class="mb-0">Validated</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-info text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-pills"></i></h2>
+                        <h3>{{ total_unique_drugs }}</h3>
+                        <p class="mb-0">Unique Drugs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center bg-warning text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-exclamation-triangle"></i></h2>
+                        <h3>{{ total_unique_events }}</h3>
+                        <p class="mb-0">Unique Adverse Events</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-tasks"></i> Validation Progress</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Validation Progress</span>
+                    <span>{{ validation_percentage|floatformat:1 }}%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ validation_percentage }}%"
+                         aria-valuenow="{{ validation_percentage }}" 
+                         aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <small class="text-muted">
+                    {{ validated_annotations }} of {{ total_annotations }} annotations have been validated
+                </small>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Top Drugs -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5><i class="fas fa-pills"></i> Most Frequent Drugs</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if top_drugs %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Drug Name</th>
+                                            <th>Frequency</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for drug, count in top_drugs %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    <span class="entity-tag drug-tag">{{ drug }}</span>
+                                                </td>
+                                                <td>{{ count }}</td>
+                                                <td>
+                                                    {% widthratio count total_annotations 100 %}%
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Drug Frequency Chart -->
+                            <div class="mt-3">
+                                <h6>Distribution Chart</h6>
+                                {% for drug, count in top_drugs %}
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between">
+                                            <small>{{ drug|truncatechars:20 }}</small>
+                                            <small>{{ count }}</small>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" 
+                                                 style="width: {% widthratio count top_drugs.0.1 100 %}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted">
+                                <i class="fas fa-pills fa-3x mb-3"></i>
+                                <p>No drugs have been annotated yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Adverse Events -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Most Frequent Adverse Events</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if top_events %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Event Name</th>
+                                            <th>Frequency</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for event, count in top_events %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>
+                                                    <span class="entity-tag adverse-event-tag">{{ event|truncatechars:30 }}</span>
+                                                </td>
+                                                <td>{{ count }}</td>
+                                                <td>
+                                                    {% widthratio count total_annotations 100 %}%
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Event Frequency Chart -->
+                            <div class="mt-3">
+                                <h6>Distribution Chart</h6>
+                                {% for event, count in top_events %}
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between">
+                                            <small>{{ event|truncatechars:20 }}</small>
+                                            <small>{{ count }}</small>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-danger" 
+                                                 style="width: {% widthratio count top_events.0.1 100 %}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted">
+                                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                                <p>No adverse events have been annotated yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Annotation Status</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success"></i> Validated: {{ validated_annotations }} annotations</li>
+                            <li><i class="fas fa-clock text-warning"></i> Pending: {{ total_annotations|add:"-"|add:validated_annotations }} annotations</li>
+                            <li><i class="fas fa-percentage text-info"></i> Completion: {{ validation_percentage|floatformat:1 }}%</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Entity Statistics</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-pills text-success"></i> Unique drugs: {{ total_unique_drugs }}</li>
+                            <li><i class="fas fa-exclamation-triangle text-danger"></i> Unique adverse events: {{ total_unique_events }}</li>
+                            <li><i class="fas fa-database text-info"></i> Total entities: {{ total_unique_drugs|add:total_unique_events }}</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {% if total_annotations > 0 %}
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-lightbulb"></i> Quick Actions</h6>
+                        <p class="mb-2">Based on your current data:</p>
+                        <div class="btn-group" role="group">
+                            {% if validated_annotations < total_annotations %}
+                                <a href="{% url 'annotation_list' %}?status=unvalidated" class="btn btn-sm btn-outline-warning">
+                                    <i class="fas fa-clock"></i> Review Unvalidated ({{ total_annotations|add:"-"|add:validated_annotations }})
+                                </a>
+                            {% endif %}
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'export_jsonl' %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i> Export
+                                </a>
+                                <a href="{% url 'export_entities_jsonl' %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-code"></i> Export Entities
+                                </a>
+                            </div>
+                            <a href="{% url 'import_jsonl' %}" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-upload"></i> Import More Data
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

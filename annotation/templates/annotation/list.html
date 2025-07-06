@@ -1,0 +1,728 @@
+{% extends 'annotation/base.html' %}
+
+{% block title %}Annotations List - Medical Data Annotation Tool{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+
+
+        <!-- Usage Instructions -->
+        <div class="alert alert-info mb-3">
+            <i class="fas fa-lightbulb"></i> <strong>How to use:</strong> Highlight text (drag or double-click) to label it as Drug or Adverse Event. Click existing highlighted entities to delete them.
+        </div>
+
+        <!-- Statistics Summary -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="card bg-info text-white text-center py-2">
+                    <div class="card-body p-2">
+                        <h6><i class="fas fa-database"></i> Total: {{ total_count }}</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white text-center py-2">
+                    <div class="card-body p-2">
+                        <h6><i class="fas fa-check-circle"></i> Validated: {{ validated_count }}</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white text-center py-2">
+                    <div class="card-body p-2">
+                        <h6><i class="fas fa-clock"></i> Pending: {{ unvalidated_count }}</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="progress mt-2">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {% if total_count > 0 %}{% widthratio validated_count total_count 100 %}{% else %}0{% endif %}%">
+                        {% if total_count > 0 %}{% widthratio validated_count total_count 100 %}{% else %}0{% endif %}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter Form -->
+        <div class="card mb-3">
+            <div class="card-body py-2">
+                <form method="get" class="row g-2 align-items-end">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control form-control-sm" name="search" 
+                               value="{{ search_query }}" placeholder="Search in text content...">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" name="status">
+                            <option value="">All Status</option>
+                            <option value="validated" {% if status_filter == 'validated' %}selected{% endif %}>Validated</option>
+                            <option value="unvalidated" {% if status_filter == 'unvalidated' %}selected{% endif %}>Pending</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Hidden CSRF token for AJAX requests -->
+        {% csrf_token %}
+        
+        <!-- Annotations Validation List -->
+        {% if page_obj.object_list %}
+            <div class="validation-container" style="max-height: 70vh; overflow-y: auto;">
+                {% for annotation in page_obj.object_list %}
+                    <div class="annotation-item card mb-2" data-annotation-id="{{ annotation.id }}">
+                        <div class="card-body p-3">
+                            <!-- Header with ID and Status -->
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-secondary">#{{ annotation.id }}</span>
+                                <div class="annotation-controls">
+                                    {% if annotation.is_validated %}
+                                        <span class="badge bg-success me-2">
+                                            <i class="fas fa-check"></i> Validated
+                                        </span>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="toggleValidation({{ annotation.id }}, false)">
+                                            <i class="fas fa-undo"></i> Unvalidate
+                                        </button>
+                                    {% else %}
+                                        <span class="badge bg-warning me-2">
+                                            <i class="fas fa-clock"></i> Pending
+                                        </span>
+                                        <button class="btn btn-success btn-sm" onclick="toggleValidation({{ annotation.id }}, true)">
+                                            <i class="fas fa-check"></i> Validate
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Main Text with Highlighted Entities -->
+                            <div class="text-content mb-3" 
+                                 data-text="{{ annotation.text }}"
+                                 data-drugs="{{ annotation.drugs|join:',' }}"
+                                 data-adverse-events="{{ annotation.adverse_events|join:',' }}">
+                                {{ annotation.text }}
+                            </div>
+                            
+                            <!-- Entity Summary -->
+                            <div class="entity-summary mb-2">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted"><i class="fas fa-pills"></i> Drugs ({{ annotation.drugs|length }}):</small>
+                                        {% if annotation.drugs %}
+                                            {% for drug in annotation.drugs %}
+                                                <span class="entity-tag drug-tag">{{ drug }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted">None</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted"><i class="fas fa-exclamation-triangle"></i> Adverse Events ({{ annotation.adverse_events|length }}):</small>
+                                        {% if annotation.adverse_events %}
+                                            {% for event in annotation.adverse_events %}
+                                                <span class="entity-tag adverse-event-tag">{{ event }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted">None</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Annotations pagination" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info text-center">
+                <h4><i class="fas fa-info-circle"></i> No annotations found</h4>
+                <p>{% if search_query or status_filter %}
+                    No annotations match your search criteria. <a href="{% url 'annotation_list' %}">Clear filters</a>
+                {% else %}
+                    Start by <a href="{% url 'import_jsonl' %}">importing your JSONL data</a>.
+                {% endif %}</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Entity Popup -->
+<div id="entity-popup" class="entity-popup" style="display: none;">
+    <!-- Content will be dynamically filled -->
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Highlight entities in text with click handlers
+function highlightEntities() {
+    document.querySelectorAll('.text-content').forEach(function(element) {
+        let text = element.getAttribute('data-text');
+        let drugs = element.getAttribute('data-drugs').split(',').filter(d => d.trim());
+        let adverseEvents = element.getAttribute('data-adverse-events').split(',').filter(e => e.trim());
+        const annotationId = element.closest('[data-annotation-id]').getAttribute('data-annotation-id');
+        
+        // Sort by length (longest first) to avoid partial matches
+        let allEntities = [];
+        drugs.forEach(drug => {
+            if (drug.trim()) {
+                allEntities.push({text: drug.trim(), type: 'drug'});
+            }
+        });
+        adverseEvents.forEach(event => {
+            if (event.trim()) {
+                allEntities.push({text: event.trim(), type: 'adverse-event'});
+            }
+        });
+        
+        // Sort by length descending to handle overlapping matches better
+        allEntities.sort((a, b) => b.text.length - a.text.length);
+        
+        let highlightedText = text;
+        allEntities.forEach(entity => {
+            const regex = new RegExp('\\b' + entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+            const className = entity.type === 'drug' ? 'highlight-drug' : 'highlight-adverse-event';
+            const clickable = `<span class="${className} entity-clickable" 
+                data-entity="${entity.text}" 
+                data-type="${entity.type}" 
+                data-annotation-id="${annotationId}"
+                onclick="showEntityPopup('${entity.text}', '${entity.type}', ${annotationId}, this)">$&</span>`;
+            highlightedText = highlightedText.replace(regex, clickable);
+        });
+        
+        element.innerHTML = highlightedText;
+        
+        // Add text selection handler for adding new entities (drag selection)
+        element.addEventListener('mouseup', function(e) {
+            // Only handle if we didn't click on an existing entity
+            if (!e.target.classList.contains('entity-clickable')) {
+                setTimeout(() => {
+                    const selection = window.getSelection();
+                    const selectedText = selection.toString().trim();
+                    if (selectedText) {
+                        const rect = selection.getRangeAt(0).getBoundingClientRect();
+                        showAddEntityPopup(selectedText, annotationId, rect.left + window.scrollX, rect.bottom + window.scrollY + 5);
+                        selection.removeAllRanges();
+                    }
+                }, 50);
+            }
+        });
+
+        // Add double-click handler for word selection
+        element.addEventListener('dblclick', function(e) {
+            // Only handle if we didn't click on an existing entity
+            if (!e.target.classList.contains('entity-clickable')) {
+                e.preventDefault();
+                const selection = window.getSelection();
+                const selectedText = selection.toString().trim();
+                if (selectedText) {
+                    const rect = selection.getRangeAt(0).getBoundingClientRect();
+                    showAddEntityPopup(selectedText, annotationId, rect.left + window.scrollX, rect.bottom + window.scrollY + 5);
+                    selection.removeAllRanges();
+                }
+            }
+        });
+    });
+}
+
+// Toggle validation status
+function toggleValidation(annotationId, isValidated) {
+    fetch(`/annotation/edit/${annotationId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `is_validated=${isValidated ? 'on' : ''}&ajax=true`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (isValidated) {
+                // Hide the validated annotation with animation
+                const annotationItem = document.querySelector(`[data-annotation-id="${annotationId}"]`);
+                annotationItem.style.transition = 'all 0.3s ease';
+                annotationItem.style.opacity = '0';
+                annotationItem.style.transform = 'translateX(100%)';
+                
+                setTimeout(() => {
+                    annotationItem.style.display = 'none';
+                    updateCounters();
+                }, 300);
+            } else {
+                location.reload(); // Reload to show unvalidated item
+            }
+        } else {
+            alert('Error updating validation status');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating validation status');
+    });
+}
+
+
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Space bar to validate/unvalidate (when not in input)
+    if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        e.preventDefault();
+        const annotations = document.querySelectorAll('.annotation-item');
+        // Find first unvalidated annotation and validate it
+        for (let item of annotations) {
+            const validateBtn = item.querySelector('.btn-success');
+            if (validateBtn) {
+                validateBtn.click();
+                break;
+            }
+        }
+    }
+});
+
+// Show popup for existing entity (delete option)
+function showEntityPopup(entityText, entityType, annotationId, element) {
+    const popup = document.getElementById('entity-popup');
+    const rect = element.getBoundingClientRect();
+    
+    popup.style.display = 'block';
+    popup.style.left = (rect.left + window.scrollX) + 'px';
+    popup.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+    
+    const entityTypeLabel = entityType === 'drug' ? 'Drug' : 'Adverse Event';
+    // Escape quotes in entityText for safe HTML
+    const safeEntityText = entityText.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    
+    popup.innerHTML = `
+        <div class="popup-content">
+            <strong>${entityTypeLabel}:</strong> "${entityText}"
+            <div class="popup-buttons">
+                <button class="btn btn-danger btn-sm" onclick="deleteEntity('${safeEntityText}', '${entityType}', ${annotationId})">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="hidePopup()">Cancel</button>
+            </div>
+        </div>
+    `;
+}
+
+// Show popup for adding new entity
+function showAddEntityPopup(selectedText, annotationId, x, y) {
+    const popup = document.getElementById('entity-popup');
+    
+    popup.style.display = 'block';
+    popup.style.left = x + 'px';
+    popup.style.top = y + 'px';
+    
+    popup.innerHTML = `
+        <div class="popup-content">
+            <strong>Add Entity:</strong> "${selectedText}"
+            <div class="popup-buttons">
+                <button class="btn btn-success btn-sm" onclick="addEntity('${selectedText}', 'drug', ${annotationId})">
+                    <i class="fas fa-pills"></i> Add as Drug
+                </button>
+                <button class="btn btn-warning btn-sm" onclick="addEntity('${selectedText}', 'adverse-event', ${annotationId})">
+                    <i class="fas fa-exclamation-triangle"></i> Add as Adverse Event
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="hidePopup()">Cancel</button>
+            </div>
+        </div>
+    `;
+}
+
+// Hide popup
+function hidePopup() {
+    document.getElementById('entity-popup').style.display = 'none';
+}
+
+// Delete entity
+function deleteEntity(entityText, entityType, annotationId) {
+    // Decode HTML entities
+    const decodedText = entityText.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+    
+    const annotationElement = document.querySelector(`[data-annotation-id="${annotationId}"]`);
+    const textContent = annotationElement.querySelector('.text-content');
+    
+    let currentDrugs = textContent.getAttribute('data-drugs').split(',').filter(d => d.trim());
+    let currentEvents = textContent.getAttribute('data-adverse-events').split(',').filter(e => e.trim());
+    
+    console.log('Before deletion:', {
+        entityText: decodedText,
+        entityType: entityType,
+        currentDrugs: currentDrugs,
+        currentEvents: currentEvents
+    });
+    
+    if (entityType === 'drug') {
+        currentDrugs = currentDrugs.filter(drug => drug.trim() !== decodedText.trim());
+    } else {
+        currentEvents = currentEvents.filter(event => event.trim() !== decodedText.trim());
+    }
+    
+    console.log('After deletion:', {
+        currentDrugs: currentDrugs,
+        currentEvents: currentEvents
+    });
+    
+    updateAnnotationEntities(annotationId, currentDrugs.join(', '), currentEvents.join(', '));
+    hidePopup();
+}
+
+// Add entity
+function addEntity(entityText, entityType, annotationId) {
+    const annotationElement = document.querySelector(`[data-annotation-id="${annotationId}"]`);
+    const textContent = annotationElement.querySelector('.text-content');
+    
+    let currentDrugs = textContent.getAttribute('data-drugs').split(',').filter(d => d.trim());
+    let currentEvents = textContent.getAttribute('data-adverse-events').split(',').filter(e => e.trim());
+    
+    if (entityType === 'drug') {
+        if (!currentDrugs.includes(entityText.trim())) {
+            currentDrugs.push(entityText.trim());
+        }
+    } else {
+        if (!currentEvents.includes(entityText.trim())) {
+            currentEvents.push(entityText.trim());
+        }
+    }
+    
+    updateAnnotationEntities(annotationId, currentDrugs.join(', '), currentEvents.join(', '));
+    hidePopup();
+}
+
+// Update annotation entities
+function updateAnnotationEntities(annotationId, drugsString, eventsString) {
+    const formData = new FormData();
+    formData.append('drugs', drugsString);
+    formData.append('adverse_events', eventsString);
+    formData.append('ajax', 'true');
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch(`/annotation/edit/${annotationId}/`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the data attributes
+            const annotationElement = document.querySelector(`[data-annotation-id="${annotationId}"]`);
+            const textContent = annotationElement.querySelector('.text-content');
+            textContent.setAttribute('data-drugs', drugsString);
+            textContent.setAttribute('data-adverse-events', eventsString);
+            
+            // Update entity summary
+            updateEntitySummary(annotationId, drugsString, eventsString);
+            
+            // Re-highlight
+            highlightSingleAnnotation(annotationId);
+        } else {
+            alert('Error updating entities');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating entities');
+    });
+}
+
+// Update entity summary
+function updateEntitySummary(annotationId, drugsString, eventsString) {
+    const annotationElement = document.querySelector(`[data-annotation-id="${annotationId}"]`);
+    const entitySummary = annotationElement.querySelector('.entity-summary');
+    
+    const drugs = drugsString ? drugsString.split(',').map(d => d.trim()).filter(d => d) : [];
+    const events = eventsString ? eventsString.split(',').map(e => e.trim()).filter(e => e) : [];
+    
+    const drugsHtml = drugs.length > 0 ? 
+        drugs.map(drug => `<span class="entity-tag drug-tag">${drug}</span>`).join('') :
+        '<span class="text-muted">None</span>';
+    
+    const eventsHtml = events.length > 0 ? 
+        events.map(event => `<span class="entity-tag adverse-event-tag">${event}</span>`).join('') :
+        '<span class="text-muted">None</span>';
+    
+    entitySummary.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <small class="text-muted"><i class="fas fa-pills"></i> Drugs (${drugs.length}):</small>
+                ${drugsHtml}
+            </div>
+            <div class="col-md-6">
+                <small class="text-muted"><i class="fas fa-exclamation-triangle"></i> Adverse Events (${events.length}):</small>
+                ${eventsHtml}
+            </div>
+        </div>
+    `;
+}
+
+// Highlight single annotation
+function highlightSingleAnnotation(annotationId) {
+    const element = document.querySelector(`[data-annotation-id="${annotationId}"] .text-content`);
+    let text = element.getAttribute('data-text');
+    let drugs = element.getAttribute('data-drugs').split(',').filter(d => d.trim());
+    let adverseEvents = element.getAttribute('data-adverse-events').split(',').filter(e => e.trim());
+    
+    // Sort by length (longest first) to avoid partial matches
+    let allEntities = [];
+    drugs.forEach(drug => {
+        if (drug.trim()) {
+            allEntities.push({text: drug.trim(), type: 'drug'});
+        }
+    });
+    adverseEvents.forEach(event => {
+        if (event.trim()) {
+            allEntities.push({text: event.trim(), type: 'adverse-event'});
+        }
+    });
+    
+    // Sort by length descending to handle overlapping matches better
+    allEntities.sort((a, b) => b.text.length - a.text.length);
+    
+    let highlightedText = text;
+    allEntities.forEach(entity => {
+        const regex = new RegExp('\\b' + entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+        const className = entity.type === 'drug' ? 'highlight-drug' : 'highlight-adverse-event';
+        const clickable = `<span class="${className} entity-clickable" 
+            data-entity="${entity.text}" 
+            data-type="${entity.type}" 
+            data-annotation-id="${annotationId}"
+            onclick="showEntityPopup('${entity.text}', '${entity.type}', ${annotationId}, this)">$&</span>`;
+        highlightedText = highlightedText.replace(regex, clickable);
+    });
+    
+    element.innerHTML = highlightedText;
+    
+    // Ensure text selection handlers are active for re-highlighted content
+    element.removeEventListener('mouseup', element._mouseupHandler);
+    element.removeEventListener('dblclick', element._dblclickHandler);
+    
+    element._mouseupHandler = function(e) {
+        if (!e.target.classList.contains('entity-clickable')) {
+            setTimeout(() => {
+                const selection = window.getSelection();
+                const selectedText = selection.toString().trim();
+                if (selectedText) {
+                    const rect = selection.getRangeAt(0).getBoundingClientRect();
+                    showAddEntityPopup(selectedText, annotationId, rect.left + window.scrollX, rect.bottom + window.scrollY + 5);
+                    selection.removeAllRanges();
+                }
+            }, 50);
+        }
+    };
+    
+    element._dblclickHandler = function(e) {
+        if (!e.target.classList.contains('entity-clickable')) {
+            e.preventDefault();
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            if (selectedText) {
+                const rect = selection.getRangeAt(0).getBoundingClientRect();
+                showAddEntityPopup(selectedText, annotationId, rect.left + window.scrollX, rect.bottom + window.scrollY + 5);
+                selection.removeAllRanges();
+            }
+        }
+    };
+    
+    element.addEventListener('mouseup', element._mouseupHandler);
+    element.addEventListener('dblclick', element._dblclickHandler);
+}
+
+// Update counters after validation
+function updateCounters() {
+    // Simple counter update - could be made more sophisticated
+    const totalElement = document.querySelector('.bg-info h6');
+    const validatedElement = document.querySelector('.bg-success h6');
+    const pendingElement = document.querySelector('.bg-warning h6');
+    
+    if (totalElement && validatedElement && pendingElement) {
+        const currentValidated = parseInt(validatedElement.textContent.match(/\d+/)[0]) + 1;
+        const currentPending = parseInt(pendingElement.textContent.match(/\d+/)[0]) - 1;
+        
+        validatedElement.innerHTML = `<i class="fas fa-check-circle"></i> Validated: ${currentValidated}`;
+        pendingElement.innerHTML = `<i class="fas fa-clock"></i> Pending: ${currentPending}`;
+        
+        // Update progress bar
+        const total = parseInt(totalElement.textContent.match(/\d+/)[0]);
+        const percentage = (currentValidated / total) * 100;
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.style.width = `${percentage}%`;
+        progressBar.textContent = `${Math.round(percentage)}%`;
+    }
+}
+
+// Hide popup when clicking outside
+document.addEventListener('click', function(e) {
+    const popup = document.getElementById('entity-popup');
+    if (popup && !popup.contains(e.target) && !e.target.classList.contains('entity-clickable')) {
+        hidePopup();
+    }
+});
+
+// Initialize highlighting when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    highlightEntities();
+});
+</script>
+
+<style>
+.highlight-drug {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 3px;
+    padding: 1px 3px;
+    color: #155724;
+    font-weight: 500;
+}
+
+.highlight-adverse-event {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 3px;
+    padding: 1px 3px;
+    color: #721c24;
+    font-weight: 500;
+}
+
+.annotation-item {
+    transition: all 0.2s ease;
+}
+
+.annotation-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.text-content {
+    line-height: 1.6;
+    font-size: 1rem;
+    border-left: 4px solid #007bff;
+    padding-left: 1rem;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+}
+
+.validation-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    background-color: #ffffff;
+}
+
+.annotation-controls {
+    white-space: nowrap;
+}
+
+.entity-summary {
+    font-size: 0.9rem;
+}
+
+.entity-tag {
+    font-size: 0.75rem;
+    margin: 0.1rem;
+}
+
+.entity-clickable {
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.entity-clickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.entity-popup {
+    position: absolute;
+    background: white;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.popup-content {
+    font-size: 0.9rem;
+}
+
+.popup-buttons {
+    margin-top: 8px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.popup-buttons .btn {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+}
+
+.text-content {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+.validation-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.validation-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.validation-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.validation-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style>
+{% endblock %} 

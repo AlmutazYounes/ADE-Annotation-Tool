@@ -1,0 +1,126 @@
+{% extends 'annotation/base.html' %}
+
+{% block title %}Import Data - Medical Data Annotation Tool{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-upload"></i> Import JSONL Data</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Import your medical text annotations from a JSONL file. Each line should contain a JSON object 
+                    with "text", "drugs", and "adverse_events" fields.
+                </p>
+
+                <!-- Current Status -->
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> Current Database Status</h6>
+                    <p class="mb-0">
+                        There are currently <strong>{{ current_count }}</strong> annotations in the database.
+                    </p>
+                </div>
+
+                <!-- Import Form -->
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="file_path" class="form-label">
+                            <i class="fas fa-file"></i> JSONL File Path
+                        </label>
+                        <input type="text" class="form-control" id="file_path" name="file_path" 
+                               value="extracted_data.jsonl" required>
+                        <div class="form-text">
+                            Enter the path to your JSONL file. Default is "extracted_data.jsonl" in the project root.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="clear_existing" name="clear_existing">
+                            <label class="form-check-label" for="clear_existing">
+                                Clear existing data before import
+                            </label>
+                            <div class="form-text">
+                                <strong>Warning:</strong> This will delete all existing annotations before importing new data.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'annotation_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload"></i> Import Data
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Data Format Example -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-code"></i> Expected JSONL Format</h5>
+            </div>
+            <div class="card-body">
+                <p>Each line in your JSONL file should be a valid JSON object with the following structure:</p>
+                
+                <pre class="bg-light p-3 rounded"><code>{
+  "text": "On cessation of the injections, the retrocorneal membrane grew rapidly to involve the entire posterior cornea.",
+  "drugs": [],
+  "adverse_events": ["retrocorneal membrane"]
+}
+
+{
+  "text": "A whole brain irradiation was performed for 37.5Gy with a fraction size of 2.5Gy and gefitinib was replaced with erlotinib on the 5th day after radiation therapy commenced for disease progressing.",
+  "drugs": ["gefitinib", "erlotinib"],
+  "adverse_events": []
+}</code></pre>
+
+                <div class="alert alert-warning mt-3">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Important Notes:</h6>
+                    <ul class="mb-0">
+                        <li><strong>text</strong>: Required field containing the medical text</li>
+                        <li><strong>drugs</strong>: Array of drug names (can be empty)</li>
+                        <li><strong>adverse_events</strong>: Array of adverse event names (can be empty)</li>
+                        <li>Each line must be a separate, valid JSON object</li>
+                        <li>Invalid lines will be skipped with a warning message</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-question-circle"></i> Troubleshooting</h5>
+            </div>
+            <div class="card-body">
+                <h6>Common Issues:</h6>
+                <dl>
+                    <dt>File not found error</dt>
+                    <dd>Make sure the file path is correct and the file exists in the specified location.</dd>
+                    
+                    <dt>JSON parsing errors</dt>
+                    <dd>Check that each line is valid JSON. Use a JSON validator if needed.</dd>
+                    
+                    <dt>Missing required fields</dt>
+                    <dd>Ensure each JSON object has at least a "text" field. "drugs" and "adverse_events" will default to empty arrays if missing.</dd>
+                    
+                    <dt>Permission errors</dt>
+                    <dd>Make sure the Django application has read access to the specified file.</dd>
+                </dl>
+                
+                <div class="alert alert-info">
+                    <strong>Tip:</strong> Start with a small test file to verify the format works correctly before importing large datasets.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

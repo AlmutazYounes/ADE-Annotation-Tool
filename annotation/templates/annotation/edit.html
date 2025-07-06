@@ -1,0 +1,257 @@
+{% extends 'annotation/base.html' %}
+
+{% block title %}Edit Annotation #{{ annotation.id }} - Medical Data Annotation Tool{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- Navigation Buttons -->
+        <div class="card navigation-buttons mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if prev_annotation %}
+                            <a href="{% url 'annotation_edit' prev_annotation.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-chevron-left"></i> Previous (#{{ prev_annotation.id }})
+                            </a>
+                        {% else %}
+                            <button class="btn btn-outline-secondary" disabled>
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center">
+                        <h5 class="mb-0">Editing Annotation #{{ annotation.id }}</h5>
+                        <small class="text-muted">
+                            Created: {{ annotation.created_at|date:"M d, Y H:i" }} | 
+                            Updated: {{ annotation.updated_at|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                    
+                    <div>
+                        {% if next_annotation %}
+                            <a href="{% url 'annotation_edit' next_annotation.id %}" class="btn btn-outline-secondary">
+                                Next (#{{ next_annotation.id }}) <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% else %}
+                            <button class="btn btn-outline-secondary" disabled>
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Text Content -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-file-text"></i> Text Content</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="text" class="form-label">Medical Text</label>
+                        <textarea class="form-control" id="text" name="text" rows="4" required>{{ annotation.text }}</textarea>
+                        <div class="form-text">Edit the medical text if needed for clarity or correction.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entities Section -->
+            <div class="row">
+                <!-- Drugs -->
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5><i class="fas fa-pills"></i> Drugs</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="drugs" class="form-label">Drug Names</label>
+                                <textarea class="form-control" id="drugs" name="drugs" rows="4" 
+                                          placeholder="Enter drug names separated by commas">{{ annotation.get_drugs_as_string }}</textarea>
+                                <div class="form-text">
+                                    Enter drug names separated by commas. Example: aspirin, ibuprofen, acetaminophen
+                                </div>
+                            </div>
+                            
+                            <!-- Current Drugs Display -->
+                            {% if annotation.drugs %}
+                                <div class="mt-3">
+                                    <h6>Current Drugs ({{ annotation.drugs|length }}):</h6>
+                                    {% for drug in annotation.drugs %}
+                                        <span class="entity-tag drug-tag">{{ drug }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Quick Add Buttons -->
+                            <div class="mt-3">
+                                <h6>Quick Add Common Drugs:</h6>
+                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'aspirin')">aspirin</button>
+                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'ibuprofen')">ibuprofen</button>
+                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'acetaminophen')">acetaminophen</button>
+                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'warfarin')">warfarin</button>
+                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'metformin')">metformin</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adverse Events -->
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Adverse Events</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="adverse_events" class="form-label">Adverse Event Names</label>
+                                <textarea class="form-control" id="adverse_events" name="adverse_events" rows="4" 
+                                          placeholder="Enter adverse events separated by commas">{{ annotation.get_adverse_events_as_string }}</textarea>
+                                <div class="form-text">
+                                    Enter adverse events separated by commas. Example: nausea, headache, dizziness
+                                </div>
+                            </div>
+                            
+                            <!-- Current Adverse Events Display -->
+                            {% if annotation.adverse_events %}
+                                <div class="mt-3">
+                                    <h6>Current Adverse Events ({{ annotation.adverse_events|length }}):</h6>
+                                    {% for event in annotation.adverse_events %}
+                                        <span class="entity-tag adverse-event-tag">{{ event }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Quick Add Buttons -->
+                            <div class="mt-3">
+                                <h6>Quick Add Common Adverse Events:</h6>
+                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'nausea')">nausea</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'headache')">headache</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'dizziness')">dizziness</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'fatigue')">fatigue</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'rash')">rash</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation Status -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-check-circle"></i> Validation Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="is_validated" name="is_validated" 
+                               {% if annotation.is_validated %}checked{% endif %}>
+                        <label class="form-check-label" for="is_validated">
+                            Mark this annotation as validated
+                        </label>
+                        <div class="form-text">
+                            Check this box when you have reviewed and confirmed the accuracy of the entities.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{% url 'annotation_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <button type="submit" name="save_and_next" class="btn btn-success">
+                                <i class="fas fa-save"></i> Save & Next
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addEntity(fieldName, entityName) {
+    const textarea = document.getElementById(fieldName);
+    let currentValue = textarea.value.trim();
+    
+    // Check if entity already exists
+    if (currentValue) {
+        const entities = currentValue.split(',').map(e => e.trim());
+        if (entities.includes(entityName)) {
+            alert(`"${entityName}" is already in the list.`);
+            return;
+        }
+        textarea.value = currentValue + ', ' + entityName;
+    } else {
+        textarea.value = entityName;
+    }
+    
+    // Focus on the textarea
+    textarea.focus();
+}
+
+// Auto-save functionality (optional)
+let autoSaveTimeout;
+function setupAutoSave() {
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                // You could implement auto-save here if needed
+                console.log('Auto-save would trigger here');
+            }, 3000); // 3 seconds delay
+        });
+    });
+}
+
+// Initialize auto-save on page load
+document.addEventListener('DOMContentLoaded', setupAutoSave);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + S to save
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        document.querySelector('form').submit();
+    }
+    
+    // Ctrl/Cmd + Right Arrow to go to next
+    if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowRight') {
+        e.preventDefault();
+        const nextButton = document.querySelector('a[href*="annotation_edit"]:last-of-type');
+        if (nextButton && !nextButton.disabled) {
+            nextButton.click();
+        }
+    }
+    
+    // Ctrl/Cmd + Left Arrow to go to previous
+    if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prevButton = document.querySelector('a[href*="annotation_edit"]:first-of-type');
+        if (prevButton && !prevButton.disabled) {
+            prevButton.click();
+        }
+    }
+});
+</script>
+{% endblock %} 
