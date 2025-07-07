@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.annotation_list, name='annotation_list'),
+    path('<int:annotation_id>/', views.annotation_list, name='annotation_single'),
     path('edit/<int:annotation_id>/', views.annotation_edit, name='annotation_edit'),
     path('import/', views.import_jsonl, name='import_jsonl'),
     path('export/', views.export_jsonl, name='export_jsonl'),

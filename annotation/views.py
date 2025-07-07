@@ -7,69 +7,49 @@ from .models import TextAnnotation
 import json
 
 
-def annotation_list(request):
-    """View to display list of all annotations with pagination"""
-    annotations = TextAnnotation.objects.all()
+def annotation_list(request, annotation_id=None):
+    """Main annotation interface - shows one annotation at a time"""
     
-    # Add search functionality
-    search_query = request.GET.get('search', '')
-    if search_query:
-        annotations = annotations.filter(text__icontains=search_query)
+    # Get the specific annotation or find the first unvalidated one
+    if annotation_id:
+        annotation = get_object_or_404(TextAnnotation, id=annotation_id)
+    else:
+        # Get first unvalidated annotation, or first annotation if all are validated
+        annotation = TextAnnotation.objects.filter(is_validated=False).first()
+        if not annotation:
+            annotation = TextAnnotation.objects.first()
+        
+        if annotation:
+            return redirect('annotation_single', annotation_id=annotation.id)
     
-    # Add filtering by validation status
-    status_filter = request.GET.get('status', '')
-    if status_filter == 'validated':
-        annotations = annotations.filter(is_validated=True)
-    elif status_filter == 'unvalidated':
-        annotations = annotations.filter(is_validated=False)
-    
-    # Pagination
-    paginator = Paginator(annotations, 10)  # Show 10 annotations per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    context = {
-        'page_obj': page_obj,
-        'search_query': search_query,
-        'status_filter': status_filter,
-        'total_count': annotations.count(),
-        'validated_count': TextAnnotation.objects.filter(is_validated=True).count(),
-        'unvalidated_count': TextAnnotation.objects.filter(is_validated=False).count(),
-    }
-    
-    return render(request, 'annotation/list.html', context)
-
-
-def annotation_edit(request, annotation_id):
-    """View to edit a specific annotation"""
-    annotation = get_object_or_404(TextAnnotation, id=annotation_id)
-    
+    # Handle form submission (AJAX and regular)
     if request.method == 'POST':
-        # Check if this is an AJAX request
-        is_ajax = request.POST.get('ajax') == 'true' or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-        
-        # Update the annotation
-        if 'text' in request.POST:
-            annotation.text = request.POST.get('text', '')
-        
-        # Handle drugs
-        if 'drugs' in request.POST:
-            drugs_string = request.POST.get('drugs', '')
-            annotation.set_drugs_from_string(drugs_string)
-        
-        # Handle adverse events
-        if 'adverse_events' in request.POST:
-            events_string = request.POST.get('adverse_events', '')
-            annotation.set_adverse_events_from_string(events_string)
-        
-        # Handle validation status
-        annotation.is_validated = request.POST.get('is_validated') == 'on'
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
         try:
+            # Handle drugs
+            if 'drugs' in request.POST:
+                drugs_string = request.POST.get('drugs', '')
+                annotation.set_drugs_from_string(drugs_string)
+            
+            # Handle adverse events
+            if 'adverse_events' in request.POST:
+                events_string = request.POST.get('adverse_events', '')
+                annotation.set_adverse_events_from_string(events_string)
+            
+            # Handle validation status
+            annotation.is_validated = request.POST.get('is_validated') == 'on'
+            
             annotation.save()
             
             if is_ajax:
-                return JsonResponse({'success': True, 'message': 'Annotation updated successfully!'})
+                return JsonResponse({
+                    'success': True, 
+                    'message': 'Annotation updated successfully!',
+                    'drugs': annotation.drugs,
+                    'adverse_events': annotation.adverse_events,
+                    'is_validated': annotation.is_validated
+                })
             
             messages.success(request, 'Annotation updated successfully!')
             
@@ -77,29 +57,58 @@ def annotation_edit(request, annotation_id):
             if 'save_and_next' in request.POST:
                 next_annotation = TextAnnotation.objects.filter(id__gt=annotation.id).first()
                 if next_annotation:
-                    return redirect('annotation_edit', annotation_id=next_annotation.id)
+                    return redirect('annotation_single', annotation_id=next_annotation.id)
                 else:
                     messages.info(request, 'No more annotations to edit.')
-                    return redirect('annotation_list')
+                    return redirect('annotation_single', annotation_id=annotation.id)
             
-            return redirect('annotation_edit', annotation_id=annotation.id)
+            return redirect('annotation_single', annotation_id=annotation.id)
             
         except Exception as e:
             if is_ajax:
                 return JsonResponse({'success': False, 'message': f'Error saving annotation: {str(e)}'})
             messages.error(request, f'Error saving annotation: {str(e)}')
     
+    # If no annotations exist, show empty state
+    if not annotation:
+        context = {
+            'no_annotations': True,
+            'total_count': 0,
+            'validated_count': 0,
+            'unvalidated_count': 0,
+        }
+        return render(request, 'annotation/list.html', context)
+    
     # Get navigation info
     prev_annotation = TextAnnotation.objects.filter(id__lt=annotation.id).last()
     next_annotation = TextAnnotation.objects.filter(id__gt=annotation.id).first()
+    
+    # Get statistics
+    total_count = TextAnnotation.objects.count()
+    validated_count = TextAnnotation.objects.filter(is_validated=True).count()
+    unvalidated_count = total_count - validated_count
+    
+    # Get current position
+    current_position = TextAnnotation.objects.filter(id__lte=annotation.id).count()
     
     context = {
         'annotation': annotation,
         'prev_annotation': prev_annotation,
         'next_annotation': next_annotation,
+        'total_count': total_count,
+        'validated_count': validated_count,
+        'unvalidated_count': unvalidated_count,
+        'current_position': current_position,
+        'progress_percentage': int((current_position / total_count) * 100) if total_count > 0 else 0,
+        'validation_percentage': int((validated_count / total_count) * 100) if total_count > 0 else 0,
     }
     
-    return render(request, 'annotation/edit.html', context)
+    return render(request, 'annotation/list.html', context)
+
+
+def annotation_edit(request, annotation_id):
+    """Redirect to main annotation interface"""
+    return redirect('annotation_single', annotation_id=annotation_id)
 
 
 def import_jsonl(request):
@@ -202,7 +211,8 @@ def export_entities_jsonl(request):
                     entities.append({
                         "start": start,
                         "end": end,
-                        "label": "DRUG"
+                        "label": "DRUG",
+                        "text": drug
                     })
             
             # Add adverse event entities
@@ -212,11 +222,9 @@ def export_entities_jsonl(request):
                     entities.append({
                         "start": start,
                         "end": end,
-                        "label": "ADE"
+                        "label": "ADVERSE_EVENT", 
+                        "text": event
                     })
-            
-            # Sort entities by start position
-            entities.sort(key=lambda x: x['start'])
             
             data = {
                 'text': annotation.text,
@@ -224,41 +232,48 @@ def export_entities_jsonl(request):
             }
             response.write(json.dumps(data, ensure_ascii=False) + '\n')
         
-        messages.success(request, f'Successfully exported {annotations.count()} annotations in entities format!')
         return response
         
     except Exception as e:
-        messages.error(request, f'Error exporting data: {str(e)}')
+        messages.error(request, f'Error exporting entities: {str(e)}')
         return redirect('annotation_list')
 
 
 def annotation_stats(request):
-    """View to show annotation statistics"""
-    total_annotations = TextAnnotation.objects.count()
-    validated_annotations = TextAnnotation.objects.filter(is_validated=True).count()
+    """View to display annotation statistics"""
+    total_count = TextAnnotation.objects.count()
+    validated_count = TextAnnotation.objects.filter(is_validated=True).count()
+    unvalidated_count = total_count - validated_count
     
-    # Statistics about entities
-    drug_stats = {}
-    event_stats = {}
-    
+    # Get drug statistics
+    all_drugs = []
     for annotation in TextAnnotation.objects.all():
-        for drug in annotation.drugs:
-            drug_stats[drug] = drug_stats.get(drug, 0) + 1
-        for event in annotation.adverse_events:
-            event_stats[event] = event_stats.get(event, 0) + 1
+        all_drugs.extend(annotation.drugs)
     
-    # Sort by frequency
-    top_drugs = sorted(drug_stats.items(), key=lambda x: x[1], reverse=True)[:10]
-    top_events = sorted(event_stats.items(), key=lambda x: x[1], reverse=True)[:10]
+    drug_stats = {}
+    for drug in all_drugs:
+        drug_stats[drug] = drug_stats.get(drug, 0) + 1
+    
+    # Get adverse event statistics
+    all_events = []
+    for annotation in TextAnnotation.objects.all():
+        all_events.extend(annotation.adverse_events)
+    
+    event_stats = {}
+    for event in all_events:
+        event_stats[event] = event_stats.get(event, 0) + 1
     
     context = {
-        'total_annotations': total_annotations,
-        'validated_annotations': validated_annotations,
-        'validation_percentage': (validated_annotations / total_annotations * 100) if total_annotations > 0 else 0,
-        'top_drugs': top_drugs,
-        'top_events': top_events,
-        'total_unique_drugs': len(drug_stats),
-        'total_unique_events': len(event_stats),
+        'total_count': total_count,
+        'validated_count': validated_count,
+        'unvalidated_count': unvalidated_count,
+        'validation_percentage': int((validated_count / total_count) * 100) if total_count > 0 else 0,
+        'drug_stats': sorted(drug_stats.items(), key=lambda x: x[1], reverse=True)[:10],
+        'event_stats': sorted(event_stats.items(), key=lambda x: x[1], reverse=True)[:10],
+        'unique_drugs': len(drug_stats),
+        'unique_events': len(event_stats),
+        'total_drugs': len(all_drugs),
+        'total_events': len(all_events),
     }
     
     return render(request, 'annotation/stats.html', context)

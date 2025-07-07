@@ -1,238 +1,328 @@
 {% extends 'annotation/base.html' %}
 
-{% block title %}Edit Annotation #{{ annotation.id }} - Medical Data Annotation Tool{% endblock %}
+{% block title %}Annotation #{{ annotation.id }} - Medical Text Annotation{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <!-- Navigation Buttons -->
-        <div class="card navigation-buttons mb-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        {% if prev_annotation %}
-                            <a href="{% url 'annotation_edit' prev_annotation.id %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-chevron-left"></i> Previous (#{{ prev_annotation.id }})
-                            </a>
-                        {% else %}
-                            <button class="btn btn-outline-secondary" disabled>
-                                <i class="fas fa-chevron-left"></i> Previous
-                            </button>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="text-center">
-                        <h5 class="mb-0">Editing Annotation #{{ annotation.id }}</h5>
-                        <small class="text-muted">
-                            Created: {{ annotation.created_at|date:"M d, Y H:i" }} | 
-                            Updated: {{ annotation.updated_at|date:"M d, Y H:i" }}
-                        </small>
-                    </div>
-                    
-                    <div>
-                        {% if next_annotation %}
-                            <a href="{% url 'annotation_edit' next_annotation.id %}" class="btn btn-outline-secondary">
-                                Next (#{{ next_annotation.id }}) <i class="fas fa-chevron-right"></i>
-                            </a>
-                        {% else %}
-                            <button class="btn btn-outline-secondary" disabled>
-                                Next <i class="fas fa-chevron-right"></i>
-                            </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edit Form -->
-        <form method="post">
-            {% csrf_token %}
-            
-            <!-- Text Content -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5><i class="fas fa-file-text"></i> Text Content</h5>
-                </div>
-                <div class="card-body">
-                    <div class="form-group">
-                        <label for="text" class="form-label">Medical Text</label>
-                        <textarea class="form-control" id="text" name="text" rows="4" required>{{ annotation.text }}</textarea>
-                        <div class="form-text">Edit the medical text if needed for clarity or correction.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Entities Section -->
-            <div class="row">
-                <!-- Drugs -->
-                <div class="col-md-6">
-                    <div class="card mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h5><i class="fas fa-pills"></i> Drugs</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label for="drugs" class="form-label">Drug Names</label>
-                                <textarea class="form-control" id="drugs" name="drugs" rows="4" 
-                                          placeholder="Enter drug names separated by commas">{{ annotation.get_drugs_as_string }}</textarea>
-                                <div class="form-text">
-                                    Enter drug names separated by commas. Example: aspirin, ibuprofen, acetaminophen
-                                </div>
-                            </div>
-                            
-                            <!-- Current Drugs Display -->
-                            {% if annotation.drugs %}
-                                <div class="mt-3">
-                                    <h6>Current Drugs ({{ annotation.drugs|length }}):</h6>
-                                    {% for drug in annotation.drugs %}
-                                        <span class="entity-tag drug-tag">{{ drug }}</span>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            
-                            <!-- Quick Add Buttons -->
-                            <div class="mt-3">
-                                <h6>Quick Add Common Drugs:</h6>
-                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'aspirin')">aspirin</button>
-                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'ibuprofen')">ibuprofen</button>
-                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'acetaminophen')">acetaminophen</button>
-                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'warfarin')">warfarin</button>
-                                <button type="button" class="btn btn-sm btn-outline-success me-1 mb-1" onclick="addEntity('drugs', 'metformin')">metformin</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Adverse Events -->
-                <div class="col-md-6">
-                    <div class="card mb-4">
-                        <div class="card-header bg-danger text-white">
-                            <h5><i class="fas fa-exclamation-triangle"></i> Adverse Events</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="form-group">
-                                <label for="adverse_events" class="form-label">Adverse Event Names</label>
-                                <textarea class="form-control" id="adverse_events" name="adverse_events" rows="4" 
-                                          placeholder="Enter adverse events separated by commas">{{ annotation.get_adverse_events_as_string }}</textarea>
-                                <div class="form-text">
-                                    Enter adverse events separated by commas. Example: nausea, headache, dizziness
-                                </div>
-                            </div>
-                            
-                            <!-- Current Adverse Events Display -->
-                            {% if annotation.adverse_events %}
-                                <div class="mt-3">
-                                    <h6>Current Adverse Events ({{ annotation.adverse_events|length }}):</h6>
-                                    {% for event in annotation.adverse_events %}
-                                        <span class="entity-tag adverse-event-tag">{{ event }}</span>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                            
-                            <!-- Quick Add Buttons -->
-                            <div class="mt-3">
-                                <h6>Quick Add Common Adverse Events:</h6>
-                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'nausea')">nausea</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'headache')">headache</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'dizziness')">dizziness</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'fatigue')">fatigue</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger me-1 mb-1" onclick="addEntity('adverse_events', 'rash')">rash</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Validation Status -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5><i class="fas fa-check-circle"></i> Validation Status</h5>
-                </div>
-                <div class="card-body">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="is_validated" name="is_validated" 
-                               {% if annotation.is_validated %}checked{% endif %}>
-                        <label class="form-check-label" for="is_validated">
-                            Mark this annotation as validated
-                        </label>
-                        <div class="form-text">
-                            Check this box when you have reviewed and confirmed the accuracy of the entities.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <a href="{% url 'annotation_list' %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to List
-                            </a>
-                        </div>
-                        <div>
-                            <button type="submit" class="btn btn-primary me-2">
-                                <i class="fas fa-save"></i> Save Changes
-                            </button>
-                            <button type="submit" name="save_and_next" class="btn btn-success">
-                                <i class="fas fa-save"></i> Save & Next
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </form>
+<!-- Status Indicator -->
+<div class="status-indicator">
+    <div class="d-flex align-items-center">
+        {% if annotation.is_validated %}
+            <span class="badge bg-success me-2">
+                <i class="fas fa-check"></i> Validated
+            </span>
+        {% else %}
+            <span class="badge bg-warning me-2">
+                <i class="fas fa-clock"></i> Pending
+            </span>
+        {% endif %}
+        <small class="text-muted">#{{ annotation.id }}</small>
     </div>
 </div>
+
+<!-- Navigation Controls -->
+<div class="nav-controls">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            {% if prev_annotation %}
+                <a href="{% url 'annotation_edit' prev_annotation.id %}" class="btn btn-outline-secondary btn-clean">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+            {% else %}
+                <button class="btn btn-outline-secondary btn-clean" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+            {% endif %}
+        </div>
+        
+        <div class="text-center">
+            <h4 class="mb-0">Annotation #{{ annotation.id }}</h4>
+            <small class="text-muted">{{ annotation.created_at|date:"M d, Y" }}</small>
+        </div>
+        
+        <div>
+            {% if next_annotation %}
+                <a href="{% url 'annotation_edit' next_annotation.id %}" class="btn btn-outline-secondary btn-clean">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            {% else %}
+                <button class="btn btn-outline-secondary btn-clean" disabled>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Main Annotation Interface -->
+<div class="row">
+    <!-- Text Display - Takes up most of the space -->
+    <div class="col-lg-8">
+        <div class="text-display" id="text-display">
+            {{ annotation.text }}
+        </div>
+    </div>
+    
+    <!-- Annotation Sidebar -->
+    <div class="col-lg-4">
+        <div class="annotation-sidebar">
+            <form method="post" id="annotation-form">
+                {% csrf_token %}
+                
+                <!-- Drugs Section -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-pills text-success"></i> Drugs
+                        <span class="badge bg-success ms-2" id="drug-count">{{ annotation.drugs|length }}</span>
+                    </h5>
+                    
+                    <!-- Current Drugs -->
+                    <div class="mb-3" id="current-drugs">
+                        {% for drug in annotation.drugs %}
+                            <span class="entity-tag drug-tag" onclick="removeEntity('drugs', '{{ drug }}')">
+                                {{ drug }} <i class="fas fa-times ms-1"></i>
+                            </span>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Add New Drug -->
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" id="new-drug" placeholder="Add drug name..." onkeypress="handleEnterKey(event, 'drugs')">
+                        <button type="button" class="btn btn-success" onclick="addEntity('drugs')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Add Common Drugs -->
+                    <div class="quick-add">
+                        <small class="text-muted mb-2 d-block">Quick Add:</small>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('drugs', 'aspirin')">aspirin</button>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('drugs', 'ibuprofen')">ibuprofen</button>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('drugs', 'acetaminophen')">acetaminophen</button>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('drugs', 'warfarin')">warfarin</button>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('drugs', 'metformin')">metformin</button>
+                    </div>
+                </div>
+                
+                <!-- Adverse Events Section -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-exclamation-triangle text-danger"></i> Adverse Events
+                        <span class="badge bg-danger ms-2" id="event-count">{{ annotation.adverse_events|length }}</span>
+                    </h5>
+                    
+                    <!-- Current Adverse Events -->
+                    <div class="mb-3" id="current-events">
+                        {% for event in annotation.adverse_events %}
+                            <span class="entity-tag adverse-event-tag" onclick="removeEntity('adverse_events', '{{ event }}')">
+                                {{ event }} <i class="fas fa-times ms-1"></i>
+                            </span>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Add New Event -->
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" id="new-event" placeholder="Add adverse event..." onkeypress="handleEnterKey(event, 'adverse_events')">
+                        <button type="button" class="btn btn-danger" onclick="addEntity('adverse_events')">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Add Common Events -->
+                    <div class="quick-add">
+                        <small class="text-muted mb-2 d-block">Quick Add:</small>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('adverse_events', 'nausea')">nausea</button>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('adverse_events', 'headache')">headache</button>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('adverse_events', 'dizziness')">dizziness</button>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('adverse_events', 'fatigue')">fatigue</button>
+                        <button type="button" class="btn quick-add-btn" onclick="quickAdd('adverse_events', 'rash')">rash</button>
+                    </div>
+                </div>
+                
+                <!-- Validation Toggle -->
+                <div class="mb-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="is_validated" name="is_validated" 
+                               {% if annotation.is_validated %}checked{% endif %} onchange="toggleValidation()">
+                        <label class="form-check-label" for="is_validated">
+                            <strong>Mark as Validated</strong>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-clean" id="save-btn">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button type="submit" name="save_and_next" class="btn btn-success btn-clean">
+                        <i class="fas fa-arrow-right"></i> Save & Next
+                    </button>
+                    <a href="{% url 'annotation_list' %}" class="btn btn-outline-secondary btn-clean">
+                        <i class="fas fa-list"></i> Back to List
+                    </a>
+                </div>
+                
+                <!-- Hidden fields for form submission -->
+                <input type="hidden" name="drugs" id="drugs-hidden">
+                <input type="hidden" name="adverse_events" id="events-hidden">
+                <input type="hidden" name="text" value="{{ annotation.text }}">
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Instructions -->
+<div class="alert alert-info mt-4">
+    <i class="fas fa-info-circle"></i> 
+    <strong>Instructions:</strong> 
+    Use the sidebar to add/remove drugs and adverse events. Click the × on any tag to remove it. 
+    Press Enter in the input fields to quickly add items. Use keyboard shortcuts: Ctrl+S to save, Ctrl+→ for next, Ctrl+← for previous.
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function addEntity(fieldName, entityName) {
-    const textarea = document.getElementById(fieldName);
-    let currentValue = textarea.value.trim();
+// Current data
+let currentDrugs = {{ annotation.drugs|safe }};
+let currentEvents = {{ annotation.adverse_events|safe }};
+
+// Highlight entities in text
+function highlightEntities() {
+    const textDisplay = document.getElementById('text-display');
+    let text = `{{ annotation.text|escapejs }}`;
     
-    // Check if entity already exists
-    if (currentValue) {
-        const entities = currentValue.split(',').map(e => e.trim());
-        if (entities.includes(entityName)) {
-            alert(`"${entityName}" is already in the list.`);
-            return;
-        }
-        textarea.value = currentValue + ', ' + entityName;
-    } else {
-        textarea.value = entityName;
+    // Sort entities by length (longest first) to avoid overlapping issues
+    const allEntities = [];
+    currentDrugs.forEach(drug => {
+        allEntities.push({text: drug, type: 'drug'});
+    });
+    currentEvents.forEach(event => {
+        allEntities.push({text: event, type: 'adverse_event'});
+    });
+    
+    allEntities.sort((a, b) => b.text.length - a.text.length);
+    
+    // Highlight entities
+    allEntities.forEach(entity => {
+        const regex = new RegExp(`\\b${entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+        text = text.replace(regex, `<span class="highlight-${entity.type}">${entity.text}</span>`);
+    });
+    
+    textDisplay.innerHTML = text;
+}
+
+// Add entity function
+function addEntity(type) {
+    const inputId = type === 'drugs' ? 'new-drug' : 'new-event';
+    const input = document.getElementById(inputId);
+    const entityName = input.value.trim();
+    
+    if (!entityName) return;
+    
+    // Check if already exists
+    const currentList = type === 'drugs' ? currentDrugs : currentEvents;
+    if (currentList.includes(entityName)) {
+        alert(`"${entityName}" is already added.`);
+        return;
     }
     
-    // Focus on the textarea
-    textarea.focus();
+    // Add to current list
+    currentList.push(entityName);
+    
+    // Update display
+    updateEntityDisplay(type);
+    updateHiddenFields();
+    highlightEntities();
+    
+    // Clear input
+    input.value = '';
+    input.focus();
 }
 
-// Auto-save functionality (optional)
-let autoSaveTimeout;
-function setupAutoSave() {
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            clearTimeout(autoSaveTimeout);
-            autoSaveTimeout = setTimeout(() => {
-                // You could implement auto-save here if needed
-                console.log('Auto-save would trigger here');
-            }, 3000); // 3 seconds delay
-        });
+// Quick add function
+function quickAdd(type, entityName) {
+    const currentList = type === 'drugs' ? currentDrugs : currentEvents;
+    
+    if (currentList.includes(entityName)) {
+        alert(`"${entityName}" is already added.`);
+        return;
+    }
+    
+    currentList.push(entityName);
+    updateEntityDisplay(type);
+    updateHiddenFields();
+    highlightEntities();
+}
+
+// Remove entity function
+function removeEntity(type, entityName) {
+    const currentList = type === 'drugs' ? currentDrugs : currentEvents;
+    const index = currentList.indexOf(entityName);
+    
+    if (index > -1) {
+        currentList.splice(index, 1);
+        updateEntityDisplay(type);
+        updateHiddenFields();
+        highlightEntities();
+    }
+}
+
+// Update entity display
+function updateEntityDisplay(type) {
+    const containerId = type === 'drugs' ? 'current-drugs' : 'current-events';
+    const countId = type === 'drugs' ? 'drug-count' : 'event-count';
+    const container = document.getElementById(containerId);
+    const currentList = type === 'drugs' ? currentDrugs : currentEvents;
+    const tagClass = type === 'drugs' ? 'drug-tag' : 'adverse-event-tag';
+    
+    container.innerHTML = '';
+    currentList.forEach(entity => {
+        const tag = document.createElement('span');
+        tag.className = `entity-tag ${tagClass}`;
+        tag.innerHTML = `${entity} <i class="fas fa-times ms-1"></i>`;
+        tag.onclick = () => removeEntity(type, entity);
+        container.appendChild(tag);
     });
+    
+    // Update count
+    document.getElementById(countId).textContent = currentList.length;
 }
 
-// Initialize auto-save on page load
-document.addEventListener('DOMContentLoaded', setupAutoSave);
+// Update hidden form fields
+function updateHiddenFields() {
+    document.getElementById('drugs-hidden').value = currentDrugs.join(',');
+    document.getElementById('events-hidden').value = currentEvents.join(',');
+}
+
+// Handle enter key
+function handleEnterKey(event, type) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addEntity(type);
+    }
+}
+
+// Toggle validation
+function toggleValidation() {
+    const checkbox = document.getElementById('is_validated');
+    const statusIndicator = document.querySelector('.status-indicator .badge');
+    
+    if (checkbox.checked) {
+        statusIndicator.className = 'badge bg-success me-2';
+        statusIndicator.innerHTML = '<i class="fas fa-check"></i> Validated';
+    } else {
+        statusIndicator.className = 'badge bg-warning me-2';
+        statusIndicator.innerHTML = '<i class="fas fa-clock"></i> Pending';
+    }
+}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
     // Ctrl/Cmd + S to save
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        document.querySelector('form').submit();
+        document.getElementById('annotation-form').submit();
     }
     
     // Ctrl/Cmd + Right Arrow to go to next
@@ -252,6 +342,12 @@ document.addEventListener('keydown', function(e) {
             prevButton.click();
         }
     }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateHiddenFields();
+    highlightEntities();
 });
 </script>
 {% endblock %} 
