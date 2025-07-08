@@ -259,20 +259,23 @@
                         </div>
                     </div>
                     
-                    <!-- Quick Reference -->
-                    <div class="border-top pt-3">
-                        <div class="small text-muted">
-                            <div class="mb-1">
-                                <kbd class="bg-light text-dark border">Ctrl+Enter</kbd> Complete & Next
-                            </div>
-                            <div class="mb-1">
-                                <kbd class="bg-light text-dark border">Esc</kbd> Close popups
-                            </div>
-                            <div>
-                                <i class="fas fa-info-circle"></i> Select text to add entities
-                            </div>
-                        </div>
-                    </div>
+                                         <!-- Quick Reference -->
+                     <div class="border-top pt-3">
+                         <div class="small text-muted">
+                             <div class="mb-1">
+                                 <kbd class="bg-light text-dark border">Ctrl+Enter</kbd> Complete & Next
+                             </div>
+                             <div class="mb-1">
+                                 <kbd class="bg-light text-dark border">Esc</kbd> Close popups
+                             </div>
+                             <div class="mb-1">
+                                 <i class="fas fa-info-circle"></i> Select text to add entities
+                             </div>
+                             <div class="text-info">
+                                 <i class="fas fa-lightbulb"></i> You can select individual words within highlighted entities
+                             </div>
+                         </div>
+                     </div>
                 </form>
             </div>
         </div>
@@ -658,21 +661,35 @@ function updateSliderLabel(position) {
     document.getElementById('note-jump-input').value = position;
 }
 
-// Setup text selection
+// Setup text selection with support for selecting within highlighted entities
 function setupTextSelection() {
     const textDisplay = document.getElementById('text-display');
     if (!textDisplay) return;
     
     textDisplay.addEventListener('mouseup', function(e) {
-        if (e.target.classList.contains('highlight-drug') || e.target.classList.contains('highlight-adverse-event')) {
-            return;
-        }
-        
         setTimeout(() => {
             const selection = window.getSelection();
             const selected = selection.toString().trim();
             
             if (selected && selected.length > 0) {
+                // Check if selection is within a highlighted entity
+                const range = selection.getRangeAt(0);
+                const container = range.commonAncestorContainer;
+                const highlightedParent = container.nodeType === Node.TEXT_NODE 
+                    ? container.parentElement 
+                    : container;
+                
+                // If selection is within a highlighted entity, allow it
+                if (highlightedParent && 
+                    (highlightedParent.classList.contains('highlight-drug') || 
+                     highlightedParent.classList.contains('highlight-adverse-event'))) {
+                    selectedText = selected;
+                    showSelectionPopup(e.pageX, e.pageY);
+                    // Don't remove selection range - let user see their selection
+                    return;
+                }
+                
+                // For regular text selection
                 selectedText = selected;
                 showSelectionPopup(e.pageX, e.pageY);
                 selection.removeAllRanges();
@@ -977,7 +994,7 @@ function jumpToNoteInput() {
     }
 }
 
-// Highlighting function
+// Enhanced highlighting function with multi-word entity support
 function highlightEntities() {
     const textDisplay = document.getElementById('text-display');
     if (!textDisplay) return;
@@ -993,33 +1010,52 @@ function highlightEntities() {
         allEntities.push({text: event, type: 'adverse-event'});
     });
     
+    // Sort by length (longest first) to handle overlapping entities properly
     allEntities.sort((a, b) => b.text.length - a.text.length);
+    
+    // Create a map to track which parts of text are already highlighted
+    const highlightedRanges = new Map();
     
     allEntities.forEach(entity => {
         const escapedText = entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`(${escapedText})`, 'gi');
+        
         text = text.replace(regex, function(match, p1, offset, string) {
             const beforeMatch = string.substring(0, offset);
             const openTags = (beforeMatch.match(/<[^>]*$/g) || []).length;
             const closeTags = (beforeMatch.match(/>[^<]*$/g) || []).length;
             if (openTags > closeTags) return match;
             
-            return `<span class="highlight-${entity.type}">${match}</span>`;
+            // Store the range for this entity
+            const endOffset = offset + match.length;
+            highlightedRanges.set(`${offset}-${endOffset}`, {
+                text: match,
+                type: entity.type,
+                fullEntity: entity.text
+            });
+            
+            return `<span class="highlight-${entity.type}" data-entity="${entity.text}" data-start="${offset}" data-end="${endOffset}">${match}</span>`;
         });
     });
     
     textDisplay.innerHTML = text;
     
+    // Add click handlers and enable text selection within highlighted entities
     setTimeout(() => {
         const highlightedElements = textDisplay.querySelectorAll('.highlight-adverse-event, .highlight-drug');
         highlightedElements.forEach(el => {
             if (!el) return;
             
+            // Add click handler for the full entity
             el.addEventListener('click', function(event) {
-                const entityText = this.textContent;
+                const entityText = this.getAttribute('data-entity');
                 const entityType = this.classList.contains('highlight-drug') ? 'drug' : 'adverse-event';
                 showEntityPopup(entityText, entityType, event);
             });
+            
+            // Enable text selection within highlighted entities
+            el.style.userSelect = 'text';
+            el.style.cursor = 'pointer';
         });
     }, 100);
 }

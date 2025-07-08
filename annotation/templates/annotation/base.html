@@ -466,6 +466,19 @@
             color: var(--primary-900);
         }
         
+        /* Selection within highlighted entities */
+        .highlight-drug::selection,
+        .highlight-adverse-event::selection {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--gray-900);
+        }
+        
+        .highlight-drug::-moz-selection,
+        .highlight-adverse-event::-moz-selection {
+            background: rgba(255, 255, 255, 0.8);
+            color: var(--gray-900);
+        }
+        
         /* Loading States */
         .loading {
             opacity: 0.6;
