@@ -1,0 +1,16 @@
+{% extends 'annotation/base.html' %}
+{% block title %}Upload ADE List{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Upload ADE List</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="ade_file" class="form-label">ADE List File (one ADE per line, plain text)</label>
+      <input type="file" class="form-control" id="ade_file" name="ade_file" accept=".txt">
+    </div>
+    <button type="submit" class="btn btn-primary">Upload</button>
+    <a href="{% url 'annotation_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %} 

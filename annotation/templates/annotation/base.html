@@ -6,245 +6,529 @@
     <title>{% block title %}Medical Text Annotation{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome for icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <style>
-        /* Custom fonts for better readability */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f8f9fa;
-            line-height: 1.6;
+        /* Modern CSS Variables for Consistent Theming */
+        :root {
+            /* Color Palette */
+            --primary-50: #f0f9ff;
+            --primary-100: #e0f2fe;
+            --primary-500: #0ea5e9;
+            --primary-600: #0284c7;
+            --primary-700: #0369a1;
+            --primary-900: #0c4a6e;
+            
+            --success-50: #f0fdf4;
+            --success-100: #dcfce7;
+            --success-500: #22c55e;
+            --success-600: #16a34a;
+            --success-700: #15803d;
+            
+            --danger-50: #fef2f2;
+            --danger-100: #fee2e2;
+            --danger-500: #ef4444;
+            --danger-600: #dc2626;
+            --danger-700: #b91c1c;
+            
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            
+            /* Spacing */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            
+            /* Typography */
+            --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, 'Cascadia Code', monospace;
         }
         
-        /* Clean navigation */
+        /* Global Typography and Base Styles */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--primary-50) 100%);
+            color: var(--gray-800);
+            line-height: 1.6;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            line-height: 1.3;
+        }
+        
+        /* Modern Navigation */
         .navbar {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 0.5rem 0;
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%) !important;
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: var(--space-md) 0;
         }
         
         .navbar-brand {
-            font-weight: 600;
-            font-size: 1.25rem;
+            font-weight: 700;
+            font-size: 1.375rem;
+            letter-spacing: -0.025em;
+            color: white !important;
+            transition: all 0.3s ease;
         }
         
-        /* Main content area */
-        .main-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
+        .navbar-brand:hover {
+            transform: translateY(-1px);
+            color: var(--primary-100) !important;
         }
         
-        /* Text display - Much larger and easier to read */
-        .text-display {
-            font-size: 1.25rem;
-            line-height: 1.8;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            border: 1px solid #e9ecef;
-            margin-bottom: 2rem;
-        }
-        
-        /* Entity highlighting */
-        .highlight-drug {
-            background: linear-gradient(120deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
-            padding: 2px 6px;
-            border-radius: 4px;
+        .nav-link {
             font-weight: 500;
-            border: 1px solid #c3e6cb;
+            padding: var(--space-sm) var(--space-md) !important;
+            border-radius: var(--radius-md);
+            margin: 0 var(--space-xs);
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white !important;
+            transform: translateY(-1px);
+        }
+        
+        /* Main Content Layout */
+        .main-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: var(--space-2xl) var(--space-md);
+        }
+        
+        /* Modern Card Design */
+        .modern-card {
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modern-card:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-2px);
+        }
+        
+        /* Text Display - Enhanced for Better Reading */
+        .text-display {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            padding: var(--space-2xl);
+            background: white;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            margin-bottom: var(--space-xl);
+            font-family: var(--font-body);
+            color: var(--gray-800);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .text-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-500), var(--success-500));
+        }
+        
+        /* Enhanced Entity Highlighting */
+        .highlight-drug {
+            background: linear-gradient(120deg, var(--success-100) 0%, var(--success-50) 100%);
+            color: var(--success-700);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: 1px solid var(--success-200);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            text-decoration: none;
         }
         
         .highlight-drug:hover {
-            background: linear-gradient(120deg, #c3e6cb 0%, #b8dcc0 100%);
+            background: linear-gradient(120deg, var(--success-200) 0%, var(--success-100) 100%);
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
+            color: var(--success-800);
         }
         
         .highlight-adverse-event {
-            background: linear-gradient(120deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 500;
-            border: 1px solid #f5c6cb;
+            background: linear-gradient(120deg, var(--danger-100) 0%, var(--danger-50) 100%);
+            color: var(--danger-700);
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: 1px solid var(--danger-200);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            text-decoration: none;
         }
         
         .highlight-adverse-event:hover {
-            background: linear-gradient(120deg, #f5c6cb 0%, #f1b3ba 100%);
+            background: linear-gradient(120deg, var(--danger-200) 0%, var(--danger-100) 100%);
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
+            color: var(--danger-800);
         }
         
-        /* Annotation sidebar */
+        /* Modern Annotation Sidebar */
         .annotation-sidebar {
             background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            border: 1px solid #e9ecef;
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
             position: sticky;
-            top: 2rem;
+            top: var(--space-xl);
             max-height: calc(100vh - 4rem);
             overflow-y: auto;
         }
         
-        /* Entity tags */
+        .annotation-sidebar h5 {
+            font-weight: 700;
+            margin-bottom: var(--space-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            color: var(--gray-800);
+        }
+        
+        /* Modern Entity Tags */
         .entity-tag {
-            display: inline-block;
-            padding: 0.4rem 0.8rem;
-            margin: 0.25rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            margin: var(--space-xs);
+            border-radius: var(--radius-lg);
+            font-size: 0.875rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid;
+            text-decoration: none;
         }
         
         .entity-tag:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
         
         .drug-tag {
-            background: #d4edda;
-            color: #155724;
-            border-color: #c3e6cb;
+            background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%);
+            color: var(--success-700);
+            border-color: var(--success-200);
+        }
+        
+        .drug-tag:hover {
+            background: linear-gradient(135deg, var(--success-200) 0%, var(--success-100) 100%);
+            color: var(--success-800);
         }
         
         .adverse-event-tag {
-            background: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
+            background: linear-gradient(135deg, var(--danger-100) 0%, var(--danger-50) 100%);
+            color: var(--danger-700);
+            border-color: var(--danger-200);
         }
         
-        /* Buttons */
-        .btn-clean {
+        .adverse-event-tag:hover {
+            background: linear-gradient(135deg, var(--danger-200) 0%, var(--danger-100) 100%);
+            color: var(--danger-800);
+        }
+        
+        /* Modern Buttons */
+        .btn-modern {
             border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+        
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-modern:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-modern.btn-primary {
+            background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+            color: white;
+        }
+        
+        .btn-modern.btn-success {
+            background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
+            color: white;
+        }
+        
+        .btn-modern.btn-danger {
+            background: linear-gradient(135deg, var(--danger-500) 0%, var(--danger-600) 100%);
+            color: white;
+        }
+        
+        .btn-modern.btn-outline-secondary {
+            background: white;
+            color: var(--gray-600);
+            border: 2px solid var(--gray-300);
+        }
+        
+        .btn-modern.btn-outline-secondary:hover {
+            background: var(--gray-50);
+            color: var(--gray-700);
+            border-color: var(--gray-400);
+        }
+        
+        /* Modern Form Controls */
+        .form-control-modern {
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
             font-weight: 500;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white;
         }
         
-        .btn-clean:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        .form-control-modern:focus {
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+            outline: none;
         }
         
-        /* Navigation controls */
+        /* Navigation Controls */
         .nav-controls {
             background: white;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border: 1px solid #e9ecef;
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            margin-bottom: var(--space-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
         }
         
-        /* Quick add section */
-        .quick-add {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1rem;
-            border: 1px solid #e9ecef;
-        }
-        
-        .quick-add-btn {
-            background: #e9ecef;
-            border: 1px solid #dee2e6;
-            color: #495057;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            margin: 0.2rem;
-            transition: all 0.2s ease;
-        }
-        
-        .quick-add-btn:hover {
-            background: #dee2e6;
-            transform: translateY(-1px);
-        }
-        
-        /* Status indicator */
-        .status-indicator {
-            position: fixed;
-            top: 80px;
-            right: 20px;
+        /* Modern Statistics */
+        .stats-modern {
             background: white;
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-            border: 1px solid #e9ecef;
-            z-index: 1000;
+            border-radius: var(--radius-xl);
+            padding: var(--space-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            margin-bottom: var(--space-xl);
         }
         
-        /* Responsive design */
+        .stats-pill {
+            background: var(--gray-100);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md) var(--space-lg);
+            font-weight: 600;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+        }
+        
+        .stats-pill.validated {
+            background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%);
+            color: var(--success-700);
+            border-color: var(--success-200);
+        }
+        
+        .stats-pill.pending {
+            background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);
+            color: var(--primary-700);
+            border-color: var(--primary-200);
+        }
+        
+        /* Selection Popup */
+        .selection-popup {
+            position: absolute;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            padding: var(--space-lg);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .popup-content {
+            text-align: center;
+        }
+        
+        .popup-buttons {
+            display: flex;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        /* Modern Alerts */
+        .alert-modern {
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid;
+            padding: var(--space-lg);
+            font-weight: 500;
+        }
+        
+        .alert-modern.alert-info {
+            background: var(--primary-50);
+            border-left-color: var(--primary-500);
+            color: var(--primary-700);
+        }
+        
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .text-display {
-                font-size: 1.1rem;
-                padding: 1.5rem;
+            .main-content {
+                padding: var(--space-lg) var(--space-md);
             }
             
-            .main-content {
-                padding: 1rem;
+            .text-display {
+                font-size: 1rem;
+                padding: var(--space-lg);
             }
             
             .annotation-sidebar {
                 position: static;
-                margin-top: 2rem;
+                margin-top: var(--space-xl);
+            }
+            
+            .btn-modern {
+                padding: var(--space-sm) var(--space-md);
+                font-size: 0.875rem;
             }
         }
         
-        /* Selection styles */
+        /* Enhanced Selection Styles */
         ::selection {
-            background: #b3d4fc;
-            color: #333;
+            background: var(--primary-100);
+            color: var(--primary-900);
         }
         
         ::-moz-selection {
-            background: #b3d4fc;
-            color: #333;
+            background: var(--primary-100);
+            color: var(--primary-900);
         }
         
-        /* Messages */
-        .alert {
-            border: none;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Smooth Animations */
+        * {
+            transition: box-shadow 0.2s ease;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: var(--radius-sm);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: var(--radius-sm);
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
         }
     </style>
 </head>
 <body>
-    <!-- Clean Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <!-- Modern Navigation -->
+    <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'annotation_list' %}">
-                <i class="fas fa-edit"></i> Medical Text Annotation
+                <i class="fas fa-stethoscope"></i> Medical Text Annotation
             </a>
             
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="{% url 'annotation_list' %}">
-                    <i class="fas fa-list"></i> Annotations
+                    <i class="fas fa-list-ul"></i> Annotations
+                </a>
+                <a class="nav-link" href="{% url 'annotation_changes' %}">
+                    <i class="fas fa-history"></i> Changes
                 </a>
                 <a class="nav-link" href="{% url 'import_jsonl' %}">
-                    <i class="fas fa-upload"></i> Import
+                    <i class="fas fa-cloud-upload-alt"></i> Import
                 </a>
                 <a class="nav-link" href="{% url 'export_jsonl' %}">
-                    <i class="fas fa-download"></i> Export
+                    <i class="fas fa-cloud-download-alt"></i> Export
                 </a>
                 <a class="nav-link" href="{% url 'annotation_stats' %}">
-                    <i class="fas fa-chart-bar"></i> Stats
+                    <i class="fas fa-chart-line"></i> Analytics
                 </a>
             </div>
         </div>
@@ -254,7 +538,7 @@
     {% if messages %}
         <div class="container mt-3">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-modern alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -269,7 +553,7 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     {% block extra_js %}
     {% endblock %}

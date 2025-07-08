@@ -5,191 +5,272 @@
 {% endblock %}
 
 {% block content %}
-
 {% if no_annotations %}
-    <!-- Empty State -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="text-center py-5">
-                <div class="annotation-sidebar">
-                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <h4 class="text-muted">No annotations available</h4>
-                    <p class="text-muted">Start by importing your medical text data.</p>
-                    <a href="{% url 'import_jsonl' %}" class="btn btn-primary btn-clean">
-                        <i class="fas fa-upload"></i> Import Data
+    <!-- Modern Empty State -->
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="modern-card text-center py-5">
+                <div class="p-4">
+                    <div class="mb-4">
+                        <i class="fas fa-file-medical fa-4x text-muted opacity-50"></i>
+                    </div>
+                    <h3 class="fw-bold text-gray-800 mb-3">No Annotations Available</h3>
+                    <p class="text-muted mb-4 fs-5">Start by importing your medical text data to begin the annotation process.</p>
+                    <a href="{% url 'import_jsonl' %}" class="btn btn-modern btn-primary btn-lg">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        Import Medical Data
                     </a>
                 </div>
             </div>
         </div>
     </div>
 {% else %}
-    <!-- Timer and Status Indicator -->
-    <div class="timer-status-bar">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="timer-display">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-clock text-primary me-2"></i>
-                        <div class="flex-grow-1">
-                            <div class="timer-current">
-                                <strong>Time: <span id="current-time">00:00</span></strong>
-                            </div>
-                            <small class="text-muted">Avg: <span id="average-time">--:--</span> per note</small>
-                        </div>
-                        <div class="timer-controls ms-3">
-                            <button class="btn btn-sm btn-success" id="start-btn" onclick="startTimer()">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            <button class="btn btn-sm btn-warning" id="pause-btn" onclick="pauseTimer()" disabled>
-                                <i class="fas fa-pause"></i>
-                            </button>
-                            <button class="btn btn-sm btn-secondary" id="reset-btn" onclick="resetTimer()">
-                                <i class="fas fa-redo"></i>
-                            </button>
-                        </div>
+    <!-- Compact Statistics & Navigation Bar -->
+    <div class="stats-modern-compact mb-2">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-2">
+                <div class="d-flex gap-1">
+                    <div class="stats-pill-compact validated flex-fill text-center">
+                        <div class="fw-bold">{{ validated_count }}</div>
+                        <div class="tiny">Valid</div>
+                    </div>
+                    <div class="stats-pill-compact pending flex-fill text-center">
+                        <div class="fw-bold">{{ unvalidated_count }}</div>
+                        <div class="tiny">Pending</div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 text-center">
-                <div class="status-indicator">
-                    <div class="d-flex align-items-center justify-content-center">
-                        {% if annotation.is_validated %}
-                            <span class="badge bg-success me-2" id="status-badge">
-                                <i class="fas fa-check"></i> Validated
-                            </span>
-                        {% else %}
-                            <span class="badge bg-warning me-2" id="status-badge">
-                                <i class="fas fa-clock"></i> Pending
-                            </span>
-                        {% endif %}
-                        <small class="text-muted">#{{ annotation.id }}</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 text-end">
-                <div class="timer-stats">
+            
+            <div class="col-md-3">
+                <div class="text-center">
+                    <h6 class="fw-bold text-gray-800 mb-0">
+                        <i class="fas fa-file-medical text-primary"></i>
+                        Annotation #{{ annotation.id }}
+                    </h6>
                     <small class="text-muted">
-                        <i class="fas fa-check-circle text-success me-1"></i>
-                        <span id="validated-today">0</span> completed today
+                        {% if annotation.is_validated %}
+                            <i class="fas fa-check-circle text-success"></i> Validated
+                        {% else %}
+                            <i class="fas fa-clock text-warning"></i> Pending
+                        {% endif %}
                     </small>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Statistics Bar -->
-    <div class="nav-controls mb-4">
-        <div class="row text-center">
-            <div class="col-md-6">
-                <div class="p-2">
-                    <h5 class="text-success mb-1">{{ validated_count }}</h5>
-                    <small class="text-muted">Validated</small>
+            
+            <div class="col-md-4">
+                <div class="d-flex gap-2 align-items-center">
+                    {% if prev_annotation %}
+                        <a href="{% url 'annotation_single' prev_annotation.id %}" class="btn btn-modern btn-outline-secondary btn-sm">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    {% else %}
+                        <button class="btn btn-modern btn-outline-secondary btn-sm" disabled>
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    {% endif %}
+                    
+                    <input type="range" 
+                           class="form-range annotation-slider flex-grow-1" 
+                           id="annotation-slider"
+                           min="1" 
+                           max="{{ total_count }}" 
+                           value="{{ current_position }}"
+                           onchange="jumpToAnnotation(this.value)"
+                           oninput="updateSliderLabel(this.value)">
+                    
+                    <input type="number" 
+                           min="1" 
+                           max="{{ total_count }}" 
+                           id="note-jump-input" 
+                           class="form-control form-control-modern text-center note-input-wider" 
+                           value="{{ current_position }}"
+                           onkeydown="if(event.key==='Enter'){jumpToNoteInput();}">
+                    
+                    {% if next_annotation %}
+                        <a href="{% url 'annotation_single' next_annotation.id %}" class="btn btn-modern btn-outline-secondary btn-sm">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% else %}
+                        <button class="btn btn-modern btn-outline-secondary btn-sm" disabled>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="text-center mt-1">
+                    <small class="text-muted">
+                        <span id="slider-preview">{{ current_position }} of {{ total_count }}</span>
+                    </small>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="p-2">
-                    <h5 class="text-warning mb-1">{{ unvalidated_count }}</h5>
-                    <small class="text-muted">Pending</small>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Navigation Controls -->
-    <div class="nav-controls">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                {% if prev_annotation %}
-                    <a href="{% url 'annotation_single' prev_annotation.id %}" class="btn btn-outline-secondary btn-clean" id="prev-btn">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </a>
-                {% else %}
-                    <button class="btn btn-outline-secondary btn-clean" disabled>
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </button>
-                {% endif %}
-            </div>
             
-            <div class="text-center">
-                <h4 class="mb-0">Medical Text Annotation</h4>
-            </div>
-            
-            <div>
+            <div class="col-md-3 text-end">
                 {% if next_annotation %}
-                    <button class="btn btn-success btn-clean" id="next-btn" onclick="validateAndNext()">
-                        <i class="fas fa-check"></i> Complete & Next
+                    <button class="btn btn-modern btn-success complete-btn-prominent" id="next-btn" onclick="validateAndNext()">
+                        <i class="fas fa-check"></i>
+                        Complete & Next
                     </button>
                 {% else %}
-                    <button class="btn btn-success btn-clean" onclick="validateCurrent()">
-                        <i class="fas fa-check"></i> Complete
+                    <button class="btn btn-modern btn-success complete-btn-prominent" onclick="validateCurrent()">
+                        <i class="fas fa-check"></i>
+                        Complete
                     </button>
                 {% endif %}
             </div>
         </div>
     </div>
-    
-    <!-- Main Annotation Interface -->
-    <div class="row">
-        <!-- Text Display - Large area for easy reading -->
+
+    <!-- Intelligent Suggestions Bar - Fixed Height to Prevent Layout Shifts -->
+    <div class="suggestions-container mb-2">
+        <div id="quick-suggestions" class="alert-modern alert-info suggestions-fixed-height" 
+             style="{% if not quick_drug_suggestions and not quick_ade_suggestions %}opacity: 0; pointer-events: none;{% endif %}">
+            <div class="d-flex align-items-center gap-3">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong class="fw-semibold ms-2">Smart Suggestions:</strong>
+                </div>
+                <div class="flex-grow-1">
+                    <div id="suggestion-list">
+                        {% if quick_drug_suggestions or quick_ade_suggestions %}
+                            {% for drug in quick_drug_suggestions %}
+                                <button type="button" class="btn btn-modern btn-success btn-sm me-1 mb-1" onclick="quickAddEntity('{{ drug }}', 'drug')">
+                                    <i class="fas fa-pills"></i> {{ drug }}
+                                </button>
+                            {% endfor %}
+                            {% for ade in quick_ade_suggestions %}
+                                <button type="button" class="btn btn-modern btn-danger btn-sm me-1 mb-1" onclick="quickAddEntity('{{ ade }}', 'ade')">
+                                    <i class="fas fa-exclamation-triangle"></i> {{ ade }}
+                                </button>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted small">No intelligent suggestions available for this text.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Annotation Interface - No Scroll Design -->
+    <div class="row g-3">
+        <!-- Text Display - Fixed Height, Scrollable -->
         <div class="col-lg-8">
-            <div class="text-display" id="text-display" data-annotation-id="{{ annotation.id }}">
-                {{ annotation.text }}
+            <div class="modern-card">
+                <div class="card-header bg-light border-bottom px-3 py-2">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h6 class="fw-semibold mb-0">
+                            <i class="fas fa-file-alt text-primary"></i>
+                            Clinical Text
+                        </h6>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleTextSize()">
+                                <i class="fas fa-search-plus" id="text-size-icon"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleFullscreen()">
+                                <i class="fas fa-expand" id="fullscreen-icon"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-display-container" id="text-container">
+                    <div class="text-display" id="text-display" data-annotation-id="{{ annotation.id }}">
+                        {{ annotation.text }}
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- Annotation Sidebar -->
+        <!-- Compact Annotation Sidebar -->
         <div class="col-lg-4">
-            <div class="annotation-sidebar">
+            <div class="annotation-sidebar-compact">
                 <form id="annotation-form">
                     {% csrf_token %}
                     
                     <!-- Drugs Section -->
-                    <div class="mb-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-pills text-success"></i> Drugs
-                            <span class="badge bg-success ms-2" id="drug-count">{{ annotation.drugs|length }}</span>
-                        </h5>
-                        
-                        <!-- Current Drugs -->
-                        <div class="mb-3" id="current-drugs">
-                            {% for drug in annotation.drugs %}
-                                <span class="entity-tag drug-tag" onclick="removeEntity('drugs', '{{ drug }}')">
-                                    {{ drug }} <i class="fas fa-times ms-1"></i>
-                                </span>
-                            {% endfor %}
+                    <div class="entity-section mb-4">
+                        <div class="entity-header">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-pills text-success"></i>
+                                Drugs
+                                <span class="badge bg-success-subtle text-success-emphasis ms-2" id="drug-count">{{ annotation.drugs|length }}</span>
+                            </h6>
+                            <div class="input-group input-group-sm">
+                                <input type="text" 
+                                       class="form-control form-control-modern" 
+                                       id="new-drug" 
+                                       placeholder="Enter drug name..." 
+                                       onkeypress="handleEnterKey(event, 'drugs')">
+                                <button type="button" class="btn btn-modern btn-success btn-sm" onclick="addEntity('drugs')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
                         </div>
                         
-                        <!-- Add New Drug -->
-                        <div class="input-group mb-2">
-                            <input type="text" class="form-control" id="new-drug" placeholder="Add drug name..." onkeypress="handleEnterKey(event, 'drugs')">
-                            <button type="button" class="btn btn-success" onclick="addEntity('drugs')">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                        <div class="entity-tags-container" id="current-drugs">
+                            {% if annotation.drugs %}
+                                {% for drug in annotation.drugs %}
+                                    <span class="entity-tag-compact drug-tag" onclick="removeEntity('drugs', '{{ drug }}')">
+                                        {{ drug }}
+                                        <i class="fas fa-times"></i>
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state-compact">
+                                    <i class="fas fa-pills opacity-50"></i>
+                                    <span class="small">No drugs identified</span>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     
                     <!-- Adverse Events Section -->
-                    <div class="mb-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-exclamation-triangle text-danger"></i> Adverse Events
-                            <span class="badge bg-danger ms-2" id="event-count">{{ annotation.adverse_events|length }}</span>
-                        </h5>
-                        
-                        <!-- Current Adverse Events -->
-                        <div class="mb-3" id="current-events">
-                            {% for event in annotation.adverse_events %}
-                                <span class="entity-tag adverse-event-tag" onclick="removeEntity('adverse_events', '{{ event }}')">
-                                    {{ event }} <i class="fas fa-times ms-1"></i>
-                                </span>
-                            {% endfor %}
+                    <div class="entity-section mb-4">
+                        <div class="entity-header">
+                            <h6 class="fw-bold mb-2">
+                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                                Adverse Events
+                                <span class="badge bg-danger-subtle text-danger-emphasis ms-2" id="event-count">{{ annotation.adverse_events|length }}</span>
+                            </h6>
+                            <div class="input-group input-group-sm">
+                                <input type="text" 
+                                       class="form-control form-control-modern" 
+                                       id="new-event" 
+                                       placeholder="Enter adverse event..." 
+                                       onkeypress="handleEnterKey(event, 'adverse_events')">
+                                <button type="button" class="btn btn-modern btn-danger btn-sm" onclick="addEntity('adverse_events')">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
                         </div>
                         
-                        <!-- Add New Event -->
-                        <div class="input-group mb-2">
-                            <input type="text" class="form-control" id="new-event" placeholder="Add adverse event..." onkeypress="handleEnterKey(event, 'adverse_events')">
-                            <button type="button" class="btn btn-danger" onclick="addEntity('adverse_events')">
-                                <i class="fas fa-plus"></i>
-                            </button>
+                        <div class="entity-tags-container" id="current-events">
+                            {% if annotation.adverse_events %}
+                                {% for event in annotation.adverse_events %}
+                                    <span class="entity-tag-compact adverse-event-tag" onclick="removeEntity('adverse_events', '{{ event }}')">
+                                        {{ event }}
+                                        <i class="fas fa-times"></i>
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state-compact">
+                                    <i class="fas fa-exclamation-triangle opacity-50"></i>
+                                    <span class="small">No adverse events identified</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Reference -->
+                    <div class="border-top pt-3">
+                        <div class="small text-muted">
+                            <div class="mb-1">
+                                <kbd class="bg-light text-dark border">Ctrl+Enter</kbd> Complete & Next
+                            </div>
+                            <div class="mb-1">
+                                <kbd class="bg-light text-dark border">Esc</kbd> Close popups
+                            </div>
+                            <div>
+                                <i class="fas fa-info-circle"></i> Select text to add entities
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -198,41 +279,312 @@
     </div>
 {% endif %}
 
-<!-- Text Selection Popup -->
+<!-- Modern Text Selection Popup -->
 <div id="selection-popup" class="selection-popup" style="display: none;">
     <div class="popup-content">
-        <div class="popup-text mb-2">Add "<span id="selected-text"></span>" as:</div>
+        <div class="fw-semibold text-gray-800 mb-3">
+            Add "<span id="selected-text" class="text-primary"></span>" as:
+        </div>
         <div class="popup-buttons">
-            <button class="btn btn-success btn-sm" onclick="addSelectedEntity('drugs')">
+            <button class="btn btn-modern btn-success btn-sm" onclick="addSelectedEntity('drugs')">
                 <i class="fas fa-pills"></i> Drug
             </button>
-            <button class="btn btn-danger btn-sm" onclick="addSelectedEntity('adverse_events')">
+            <button class="btn btn-modern btn-danger btn-sm" onclick="addSelectedEntity('adverse_events')">
                 <i class="fas fa-exclamation-triangle"></i> Adverse Event
             </button>
-            <button class="btn btn-secondary btn-sm" onclick="hideSelectionPopup()">
+            <button class="btn btn-modern btn-outline-secondary btn-sm" onclick="searchGoogleSelectedText()">
+                <i class="fab fa-google"></i> Search
+            </button>
+            <button class="btn btn-modern btn-outline-secondary btn-sm" onclick="hideSelectionPopup()">
                 <i class="fas fa-times"></i> Cancel
             </button>
         </div>
     </div>
 </div>
 
-<!-- Entity Click Popup -->
+<!-- Modern Entity Click Popup -->
 <div id="entity-popup" class="selection-popup" style="display: none;">
     <div class="popup-content">
-        <div class="popup-text mb-2">
-            <strong id="entity-type-label"></strong>: "<span id="entity-text"></span>"
+        <div class="fw-semibold text-gray-800 mb-3">
+            <span id="entity-type-label"></span>: "<span id="entity-text" class="text-primary"></span>"
         </div>
         <div class="popup-buttons">
-            <button class="btn btn-danger btn-sm" onclick="removeSelectedEntity()">
+            <button class="btn btn-modern btn-danger btn-sm" onclick="removeSelectedEntity()">
                 <i class="fas fa-trash"></i> Remove
             </button>
-            <button class="btn btn-secondary btn-sm" onclick="hideEntityPopup()">
+            <button class="btn btn-modern btn-outline-secondary btn-sm" onclick="hideEntityPopup()">
                 <i class="fas fa-times"></i> Cancel
             </button>
         </div>
     </div>
 </div>
 
+<style>
+/* Compact Top Section Styles */
+.stats-modern-compact {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--space-sm) var(--space-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-200);
+}
+
+.stats-pill-compact {
+    background: var(--gray-100);
+    border-radius: var(--radius-md);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid var(--gray-200);
+    min-height: 45px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stats-pill-compact.validated {
+    background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%);
+    color: var(--success-700);
+    border-color: var(--success-200);
+}
+
+.stats-pill-compact.pending {
+    background: linear-gradient(135deg, var(--primary-100) 0%, var(--primary-50) 100%);
+    color: var(--primary-700);
+    border-color: var(--primary-200);
+}
+
+.tiny {
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+/* Wider Note Input */
+.note-input-wider {
+    width: 80px !important;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: var(--space-xs) var(--space-sm);
+}
+
+/* Prominent Complete Button */
+.complete-btn-prominent {
+    padding: var(--space-sm) var(--space-lg);
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.complete-btn-prominent:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Fixed Height Suggestions - Prevents Layout Shifts */
+.suggestions-container {
+    min-height: 60px;
+}
+
+.suggestions-fixed-height {
+    min-height: 50px;
+    padding: var(--space-sm) var(--space-md);
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.suggestions-fixed-height .fas.fa-lightbulb {
+    font-size: 1rem;
+}
+
+/* Compact Layout Styles */
+.text-display-container {
+    height: 70vh;
+    overflow-y: auto;
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.text-display {
+    height: auto;
+    min-height: 100%;
+    margin-bottom: 0;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+}
+
+.annotation-sidebar-compact {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+    height: 70vh;
+    overflow-y: auto;
+}
+
+.entity-section {
+    background: var(--gray-50);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    border: 1px solid var(--gray-200);
+}
+
+.entity-header h6 {
+    margin-bottom: var(--space-sm);
+}
+
+.entity-tags-container {
+    max-height: 120px;
+    overflow-y: auto;
+    min-height: 60px;
+    padding: var(--space-sm);
+    background: white;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+}
+
+.entity-tag-compact {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    margin: 2px;
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid;
+    text-decoration: none;
+}
+
+.entity-tag-compact:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.entity-tag-compact.drug-tag {
+    background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%);
+    color: var(--success-700);
+    border-color: var(--success-200);
+}
+
+.entity-tag-compact.drug-tag:hover {
+    background: linear-gradient(135deg, var(--success-200) 0%, var(--success-100) 100%);
+    color: var(--success-800);
+}
+
+.entity-tag-compact.adverse-event-tag {
+    background: linear-gradient(135deg, var(--danger-100) 0%, var(--danger-50) 100%);
+    color: var(--danger-700);
+    border-color: var(--danger-200);
+}
+
+.entity-tag-compact.adverse-event-tag:hover {
+    background: linear-gradient(135deg, var(--danger-200) 0%, var(--danger-100) 100%);
+    color: var(--danger-800);
+}
+
+.empty-state-compact {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    color: var(--gray-500);
+    min-height: 40px;
+    font-style: italic;
+}
+
+.card-header {
+    background: var(--gray-50) !important;
+    border-bottom: 1px solid var(--gray-200) !important;
+}
+
+/* Text size toggle */
+.text-size-large .text-display {
+    font-size: 1.375rem;
+    line-height: 1.9;
+}
+
+/* Fullscreen mode */
+.fullscreen-mode .text-display-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1050;
+    height: 100vh;
+    background: white;
+    border-radius: 0;
+}
+
+.fullscreen-mode .text-display {
+    padding: var(--space-2xl);
+    font-size: 1.25rem;
+    line-height: 1.8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    .text-display-container {
+        height: 55vh;
+    }
+    
+    .annotation-sidebar-compact {
+        height: auto;
+        max-height: 55vh;
+        margin-top: var(--space-md);
+    }
+    
+    .complete-btn-prominent {
+        padding: var(--space-xs) var(--space-md);
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 767px) {
+    .stats-modern-compact .row {
+        text-align: center;
+        flex-direction: column;
+        gap: var(--space-sm);
+    }
+    
+    .stats-modern-compact .col-md-4 .d-flex {
+        flex-wrap: wrap;
+        gap: var(--space-sm);
+        justify-content: center;
+    }
+    
+    .annotation-slider {
+        order: 3;
+        width: 100%;
+        margin: var(--space-sm) 0;
+    }
+    
+    .complete-btn-prominent {
+        width: 100%;
+        margin-top: var(--space-sm);
+    }
+    
+    .note-input-wider {
+        width: 70px !important;
+    }
+    
+    .suggestions-container {
+        min-height: 80px;
+    }
+    
+    .suggestions-fixed-height {
+        min-height: 70px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -242,196 +594,68 @@ let currentDrugs = {{ annotation.drugs|default:"[]"|safe }};
 let currentEvents = {{ annotation.adverse_events|default:"[]"|safe }};
 let selectedText = '';
 let selectedEntity = '';
-
-// Timer variables
-let startTime = null;
-let pausedTime = 0;
-let timerInterval;
-let isRunning = false;
-let currentAnnotationId = {{ annotation.id|default:0 }};
+let isTextLarge = false;
+let isFullscreen = false;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing...');
-    console.log('Initial drugs:', currentDrugs);
-    console.log('Initial events:', currentEvents);
     highlightEntities();
     setupTextSelection();
-    initializeTimer();
+    setupGoogleSearchSelection();
 });
 
-// Timer functions
-function initializeTimer() {
-    calculateAverageTime();
-    updateTodayStats();
-    updateCurrentTimer();
-}
-
-function startTimer() {
-    if (!isRunning) {
-        startTime = Date.now() - pausedTime;
-        isRunning = true;
-        timerInterval = setInterval(updateCurrentTimer, 1000);
-        
-        // Update button states
-        document.getElementById('start-btn').disabled = true;
-        document.getElementById('pause-btn').disabled = false;
-        
-        updateCurrentTimer();
-    }
-}
-
-function pauseTimer() {
-    if (isRunning) {
-        isRunning = false;
-        clearInterval(timerInterval);
-        pausedTime = Date.now() - startTime;
-        
-        // Update button states
-        document.getElementById('start-btn').disabled = false;
-        document.getElementById('pause-btn').disabled = true;
-    }
-}
-
-function resetTimer() {
-    isRunning = false;
-    clearInterval(timerInterval);
-    startTime = null;
-    pausedTime = 0;
+// Text size toggle
+function toggleTextSize() {
+    isTextLarge = !isTextLarge;
+    const container = document.getElementById('text-container');
+    const icon = document.getElementById('text-size-icon');
     
-    // Update button states
-    document.getElementById('start-btn').disabled = false;
-    document.getElementById('pause-btn').disabled = true;
-    
-    // Reset display
-    document.getElementById('current-time').textContent = '00:00';
-}
-
-function updateCurrentTimer() {
-    if (startTime) {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        document.getElementById('current-time').textContent = 
-            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    if (isTextLarge) {
+        container.classList.add('text-size-large');
+        icon.className = 'fas fa-search-minus';
     } else {
-        document.getElementById('current-time').textContent = '00:00';
+        container.classList.remove('text-size-large');
+        icon.className = 'fas fa-search-plus';
     }
 }
 
-function calculateAverageTime() {
-    const timingData = JSON.parse(localStorage.getItem('annotationTiming') || '[]');
-    if (timingData.length === 0) {
-        document.getElementById('average-time').textContent = '--:--';
-        return;
-    }
+// Fullscreen toggle
+function toggleFullscreen() {
+    isFullscreen = !isFullscreen;
+    const container = document.getElementById('text-container');
+    const icon = document.getElementById('fullscreen-icon');
     
-    const totalTime = timingData.reduce((sum, entry) => sum + entry.duration, 0);
-    const avgSeconds = Math.floor(totalTime / timingData.length);
-    const avgMinutes = Math.floor(avgSeconds / 60);
-    const avgSecondsRemainder = avgSeconds % 60;
-    
-    document.getElementById('average-time').textContent = 
-        `${avgMinutes.toString().padStart(2, '0')}:${avgSecondsRemainder.toString().padStart(2, '0')}`;
-}
-
-function updateTodayStats() {
-    const today = new Date().toDateString();
-    const timingData = JSON.parse(localStorage.getItem('annotationTiming') || '[]');
-    const todayCount = timingData.filter(entry => new Date(entry.date).toDateString() === today).length;
-    document.getElementById('validated-today').textContent = todayCount;
-}
-
-function recordAnnotationTime() {
-    if (startTime) {
-        const duration = Math.floor((Date.now() - startTime) / 1000);
-        const timingData = JSON.parse(localStorage.getItem('annotationTiming') || '[]');
-        
-        timingData.push({
-            annotationId: currentAnnotationId,
-            duration: duration,
-            date: new Date().toISOString(),
-            timestamp: Date.now()
-        });
-        
-        // Keep only last 1000 entries to prevent localStorage bloat
-        if (timingData.length > 1000) {
-            timingData.splice(0, timingData.length - 1000);
-        }
-        
-        localStorage.setItem('annotationTiming', JSON.stringify(timingData));
-        
-        // Update average time display
-        calculateAverageTime();
-        updateTodayStats();
+    if (isFullscreen) {
+        container.classList.add('fullscreen-mode');
+        icon.className = 'fas fa-compress';
+        // Add escape key listener
+        document.addEventListener('keydown', escapeFullscreen);
+    } else {
+        container.classList.remove('fullscreen-mode');
+        icon.className = 'fas fa-expand';
+        document.removeEventListener('keydown', escapeFullscreen);
     }
 }
 
-// Highlight entities in text
-function highlightEntities() {
-    const textDisplay = document.getElementById('text-display');
-    if (!textDisplay) return;
+function escapeFullscreen(e) {
+    if (e.key === 'Escape' && isFullscreen) {
+        toggleFullscreen();
+    }
+}
+
+// Slider navigation functions
+function jumpToAnnotation(position) {
+    const annotationIds = {{ all_annotation_ids|safe }};
+    const targetId = annotationIds[position - 1];
     
-    // Get the actual text content from the element instead of template variable
-    let text = textDisplay.textContent || textDisplay.innerText;
-    console.log('Highlighting text:', text);
-    
-    // Sort entities by length (longest first) to avoid overlapping issues
-    const allEntities = [];
-    currentDrugs.forEach(drug => {
-        allEntities.push({text: drug, type: 'drug'});
-    });
-    currentEvents.forEach(event => {
-        allEntities.push({text: event, type: 'adverse_event'});
-    });
-    
-    console.log('All entities to highlight:', allEntities);
-    allEntities.sort((a, b) => b.text.length - a.text.length);
-    
-    // Highlight entities - Simple direct matching approach
-    allEntities.forEach(entity => {
-        console.log('Processing entity:', entity);
-        // Escape special characters for regex
-        const escapedText = entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // Simple global case-insensitive replacement
-        const regex = new RegExp(escapedText, 'gi');
-        const beforeReplace = text;
-        text = text.replace(regex, function(match) {
-            console.log('Replacing match:', match, 'with type:', entity.type);
-            return '<span class="highlight-' + entity.type + '" onclick="showEntityPopup(\'' + entity.text + '\', \'' + entity.type + '\', event)">' + match + '</span>';
-        });
-        if (beforeReplace !== text) {
-            console.log('Successfully highlighted:', entity.text);
-        } else {
-            console.log('No match found for:', entity.text);
-        }
-    });
-    
-    console.log('Final highlighted text:', text);
-    textDisplay.innerHTML = text;
-    
-    // Force CSS application
-    setTimeout(() => {
-        const highlightedElements = textDisplay.querySelectorAll('.highlight-adverse_event, .highlight-drug');
-        console.log('Found highlighted elements after timeout:', highlightedElements.length);
-        highlightedElements.forEach(el => {
-            if (el.classList.contains('highlight-adverse_event')) {
-                el.style.backgroundColor = '#f8d7da';
-                el.style.color = '#721c24';
-                el.style.padding = '2px 4px';
-                el.style.borderRadius = '3px';
-                el.style.border = '1px solid #f5c6cb';
-                el.style.fontWeight = '500';
-            } else if (el.classList.contains('highlight-drug')) {
-                el.style.backgroundColor = '#d4edda';
-                el.style.color = '#155724';
-                el.style.padding = '2px 4px';
-                el.style.borderRadius = '3px';
-                el.style.border = '1px solid #c3e6cb';
-                el.style.fontWeight = '500';
-            }
-        });
-    }, 100);
+    if (targetId) {
+        window.location.href = `/annotation/${targetId}/`;
+    }
+}
+
+function updateSliderLabel(position) {
+    document.getElementById('slider-preview').textContent = `${position} of {{ total_count }}`;
+    document.getElementById('note-jump-input').value = position;
 }
 
 // Setup text selection
@@ -440,7 +664,6 @@ function setupTextSelection() {
     if (!textDisplay) return;
     
     textDisplay.addEventListener('mouseup', function(e) {
-        // Don't trigger on highlighted entities
         if (e.target.classList.contains('highlight-drug') || e.target.classList.contains('highlight-adverse-event')) {
             return;
         }
@@ -577,16 +800,26 @@ function updateEntityDisplay(type) {
     const currentList = type === 'drugs' ? currentDrugs : currentEvents;
     const tagClass = type === 'drugs' ? 'drug-tag' : 'adverse-event-tag';
     
-    container.innerHTML = '';
-    currentList.forEach(entity => {
-        const tag = document.createElement('span');
-        tag.className = `entity-tag ${tagClass}`;
-        tag.innerHTML = `${entity} <i class="fas fa-times ms-1"></i>`;
-        tag.onclick = () => removeEntity(type, entity);
-        container.appendChild(tag);
-    });
+    if (container) {
+        if (currentList.length === 0) {
+            const emptyState = type === 'drugs' 
+                ? '<div class="empty-state-compact"><i class="fas fa-pills opacity-50"></i><span class="small">No drugs identified</span></div>'
+                : '<div class="empty-state-compact"><i class="fas fa-exclamation-triangle opacity-50"></i><span class="small">No adverse events identified</span></div>';
+            container.innerHTML = emptyState;
+        } else {
+            container.innerHTML = '';
+            currentList.forEach(entity => {
+                const tag = document.createElement('span');
+                tag.className = `entity-tag-compact ${tagClass}`;
+                tag.innerHTML = `${entity} <i class="fas fa-times"></i>`;
+                tag.onclick = () => removeEntity(type, entity);
+                container.appendChild(tag);
+            });
+        }
+    }
     
-    document.getElementById(countId).textContent = currentList.length;
+    const countElem = document.getElementById(countId);
+    if (countElem) countElem.textContent = currentList.length;
 }
 
 // Handle enter key
@@ -602,8 +835,8 @@ let autoSaveTimeout;
 function autoSave() {
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(() => {
-        saveAnnotation(true); // Silent save
-    }, 1000); // Save after 1 second of inactivity
+        saveAnnotation(true);
+    }, 1000);
 }
 
 // Save annotation
@@ -626,11 +859,12 @@ function saveAnnotation(silent = false, validated = false) {
     .then(response => response.json())
     .then(data => {
         if (data.success && !silent) {
-            // Update status indicator if validated
             if (validated) {
                 const statusBadge = document.getElementById('status-badge');
-                statusBadge.className = 'badge bg-success me-2';
-                statusBadge.innerHTML = '<i class="fas fa-check"></i> Validated';
+                if (statusBadge) {
+                    statusBadge.className = 'badge bg-success me-2';
+                    statusBadge.innerHTML = '<i class="fas fa-check"></i> Validated';
+                }
             }
         }
         return data;
@@ -648,11 +882,9 @@ function validateAndNext() {
     const nextBtn = document.getElementById('next-btn');
     const originalText = nextBtn.innerHTML;
     
-    nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    nextBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> Saving...';
     nextBtn.disabled = true;
-    
-    // Record timing data before moving to next
-    recordAnnotationTime();
+    nextBtn.classList.add('loading');
     
     saveAnnotation(false, true).then(() => {
         setTimeout(() => {
@@ -663,29 +895,30 @@ function validateAndNext() {
     }).catch(() => {
         nextBtn.innerHTML = originalText;
         nextBtn.disabled = false;
+        nextBtn.classList.remove('loading');
     });
 }
 
 // Validate current annotation
 function validateCurrent() {
-    const btn = document.querySelector('.btn-success');
+    const btn = document.querySelector('.btn-modern.btn-success');
     const originalText = btn.innerHTML;
     
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    btn.innerHTML = '<i class="fas fa-spinner spinner"></i> Saving...';
     btn.disabled = true;
-    
-    // Record timing data
-    recordAnnotationTime();
+    btn.classList.add('loading');
     
     saveAnnotation(false, true).then(() => {
         btn.innerHTML = '<i class="fas fa-check"></i> Completed';
         setTimeout(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
+            btn.classList.remove('loading');
         }, 2000);
     }).catch(() => {
         btn.innerHTML = originalText;
         btn.disabled = false;
+        btn.classList.remove('loading');
     });
 }
 
@@ -701,7 +934,6 @@ document.addEventListener('click', function(e) {
 
 // Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
-    // Ctrl/Cmd + Enter to validate and next
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         const nextBtn = document.getElementById('next-btn');
@@ -712,7 +944,6 @@ document.addEventListener('keydown', function(e) {
         }
     }
     
-    // Ctrl/Cmd + Right Arrow to go to next
     if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowRight') {
         e.preventDefault();
         const nextBtn = document.getElementById('next-btn');
@@ -721,136 +952,124 @@ document.addEventListener('keydown', function(e) {
         }
     }
     
-    // Ctrl/Cmd + Left Arrow to go to previous
     if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowLeft') {
         e.preventDefault();
-        const prevBtn = document.getElementById('prev-btn');
-        if (prevBtn && !prevBtn.disabled) {
+        const prevBtn = document.querySelector('a.btn-modern.btn-outline-secondary');
+        if (prevBtn) {
             prevBtn.click();
         }
     }
     
-    // Escape to hide popups
     if (e.key === 'Escape') {
         hideSelectionPopup();
         hideEntityPopup();
     }
 });
+
+function jumpToNoteInput() {
+    const input = document.getElementById('note-jump-input');
+    const value = parseInt(input.value, 10);
+    if (!isNaN(value) && value >= 1 && value <= {{ total_count }}) {
+        jumpToAnnotation(value);
+    } else {
+        input.classList.add('is-invalid');
+        setTimeout(() => input.classList.remove('is-invalid'), 1200);
+    }
+}
+
+// Highlighting function
+function highlightEntities() {
+    const textDisplay = document.getElementById('text-display');
+    if (!textDisplay) return;
+    
+    let text = textDisplay.textContent || textDisplay.innerText;
+    const allEntities = [];
+    
+    currentDrugs.forEach(drug => {
+        allEntities.push({text: drug, type: 'drug'});
+    });
+    
+    currentEvents.forEach(event => {
+        allEntities.push({text: event, type: 'adverse-event'});
+    });
+    
+    allEntities.sort((a, b) => b.text.length - a.text.length);
+    
+    allEntities.forEach(entity => {
+        const escapedText = entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedText})`, 'gi');
+        text = text.replace(regex, function(match, p1, offset, string) {
+            const beforeMatch = string.substring(0, offset);
+            const openTags = (beforeMatch.match(/<[^>]*$/g) || []).length;
+            const closeTags = (beforeMatch.match(/>[^<]*$/g) || []).length;
+            if (openTags > closeTags) return match;
+            
+            return `<span class="highlight-${entity.type}">${match}</span>`;
+        });
+    });
+    
+    textDisplay.innerHTML = text;
+    
+    setTimeout(() => {
+        const highlightedElements = textDisplay.querySelectorAll('.highlight-adverse-event, .highlight-drug');
+        highlightedElements.forEach(el => {
+            if (!el) return;
+            
+            el.addEventListener('click', function(event) {
+                const entityText = this.textContent;
+                const entityType = this.classList.contains('highlight-drug') ? 'drug' : 'adverse-event';
+                showEntityPopup(entityText, entityType, event);
+            });
+        });
+    }, 100);
+}
+
+// Google Search functionality
+function setGoogleSearchInput(text) {
+    const searchInput = document.getElementById('google-search-input');
+    if (searchInput) {
+        searchInput.value = text;
+    }
+}
+
+function setupGoogleSearchSelection() {
+    const textDisplay = document.getElementById('text-display');
+    if (!textDisplay) return;
+    
+    textDisplay.addEventListener('mouseup', function(e) {
+        setTimeout(() => {
+            const selection = window.getSelection();
+            const selected = selection.toString().trim();
+            if (selected && selected.length > 0) {
+                setGoogleSearchInput(selected);
+            }
+        }, 50);
+    });
+}
+
+function searchGoogleSelectedText() {
+    const selected = document.getElementById('selected-text').textContent.trim();
+    if (selected) {
+        const url = `https://www.google.com/search?q=${encodeURIComponent(selected + ' medical term')}`;
+        window.open(url, '_blank');
+    }
+    hideSelectionPopup();
+}
+
+// Quick add entity from suggestions
+function quickAddEntity(entityName, type) {
+    const currentList = type === 'drug' ? currentDrugs : currentEvents;
+    const entityType = type === 'drug' ? 'drugs' : 'adverse_events';
+    
+    if (currentList.includes(entityName)) {
+        alert(`"${entityName}" is already added.`);
+        return;
+    }
+    
+    currentList.push(entityName);
+    updateEntityDisplay(entityType);
+    highlightEntities();
+    autoSave();
+}
 </script>
-
-<style>
-/* Timer styles */
-.timer-status-bar {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 16px;
-    border: 1px solid #dee2e6;
-}
-
-.timer-display {
-    font-size: 1rem;
-}
-
-.timer-current {
-    font-size: 1.1rem;
-    color: #007bff;
-}
-
-.timer-stats {
-    font-size: 0.9rem;
-}
-
-.timer-controls {
-    display: flex;
-    gap: 4px;
-}
-
-.timer-controls .btn {
-    padding: 4px 8px;
-    min-width: 32px;
-}
-
-#current-time {
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    color: #007bff;
-}
-
-#average-time {
-    font-family: 'Courier New', monospace;
-    color: #28a745;
-}
-
-/* Selection popup styles */
-.selection-popup {
-    position: absolute;
-    background: white;
-    border: 2px solid #007bff;
-    border-radius: 8px;
-    padding: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 1000;
-    min-width: 220px;
-}
-
-.popup-content {
-    font-size: 0.9rem;
-}
-
-.popup-text {
-    font-weight: 500;
-    color: #333;
-}
-
-.popup-buttons {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.popup-buttons .btn {
-    padding: 4px 8px;
-    font-size: 0.8rem;
-    flex: 1;
-    min-width: 60px;
-}
-
-/* Enhanced highlighting */
-.highlight-drug {
-    background: linear-gradient(120deg, #d4edda 0%, #c3e6cb 100%);
-    color: #155724;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-weight: 500;
-    border: 1px solid #c3e6cb;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 0 1px;
-}
-
-.highlight-drug:hover {
-    background: linear-gradient(120deg, #c3e6cb 0%, #b8dcc0 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-.highlight-adverse-event {
-    background: linear-gradient(120deg, #f8d7da 0%, #f5c6cb 100%);
-    color: #721c24;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-weight: 500;
-    border: 1px solid #f5c6cb;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 0 1px;
-}
-
-.highlight-adverse-event:hover {
-    background: linear-gradient(120deg, #f5c6cb 0%, #f1b3ba 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-</style>
 {% endblock %} 

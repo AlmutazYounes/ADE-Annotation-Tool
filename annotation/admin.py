@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import TextAnnotation
+from .models import TextAnnotation, AnnotationChange, DrugListEntry, ADEListEntry
 
 
 @admin.register(TextAnnotation)
@@ -61,3 +61,52 @@ class TextAnnotationAdmin(admin.ModelAdmin):
         updated = queryset.update(is_validated=False)
         self.message_user(request, f'{updated} annotations marked as unvalidated.')
     mark_as_unvalidated.short_description = "Mark selected annotations as unvalidated"
+
+
+@admin.register(AnnotationChange)
+class AnnotationChangeAdmin(admin.ModelAdmin):
+    """Admin interface for AnnotationChange model"""
+    
+    list_display = ['id', 'annotation_link', 'change_type', 'entity_name', 'field_name', 'timestamp', 'session_id']
+    list_filter = ['change_type', 'field_name', 'timestamp']
+    search_fields = ['annotation__id', 'entity_name', 'session_id']
+    readonly_fields = ['annotation', 'change_type', 'field_name', 'old_value', 'new_value', 'entity_name', 'timestamp', 'session_id']
+    list_per_page = 50
+    ordering = ['-timestamp']
+    
+    fieldsets = (
+        ('Change Information', {
+            'fields': ('annotation', 'change_type', 'field_name', 'entity_name')
+        }),
+        ('Values', {
+            'fields': ('old_value', 'new_value'),
+            'description': 'JSON representation of the old and new values'
+        }),
+        ('Metadata', {
+            'fields': ('timestamp', 'session_id'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def annotation_link(self, obj):
+        """Create a link to the annotation"""
+        if obj.annotation:
+            return f'<a href="/admin/annotation/textannotation/{obj.annotation.id}/change/">{obj.annotation.id}</a>'
+        return '-'
+    annotation_link.short_description = "Annotation ID"
+    annotation_link.allow_tags = True
+    
+    def has_add_permission(self, request):
+        """Disable adding changes manually - they should only be created by the system"""
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        """Disable editing changes - they should be read-only"""
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        """Allow deletion for admin cleanup"""
+        return True
+
+admin.site.register(DrugListEntry)
+admin.site.register(ADEListEntry)

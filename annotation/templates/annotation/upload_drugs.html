@@ -1,0 +1,16 @@
+{% extends 'annotation/base.html' %}
+{% block title %}Upload Drug List{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Upload Drug List</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="drug_file" class="form-label">Drug List File (one drug per line, plain text)</label>
+      <input type="file" class="form-control" id="drug_file" name="drug_file" accept=".txt">
+    </div>
+    <button type="submit" class="btn btn-primary">Upload</button>
+    <a href="{% url 'annotation_list' %}" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %} 

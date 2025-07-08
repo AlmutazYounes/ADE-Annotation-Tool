@@ -3,9 +3,14 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import transaction
-from .models import TextAnnotation
+from .models import TextAnnotation, AnnotationChange, DrugListEntry, ADEListEntry
 import json
+from django.db.models import Count, Max
+import re
 
+# Global sets for uploaded drugs/ADEs, initialized from data
+UPLOADED_DRUGS = set(d for ann in TextAnnotation.objects.all() for d in ann.drugs)
+UPLOADED_ADES = set(a for ann in TextAnnotation.objects.all() for a in ann.adverse_events)
 
 def annotation_list(request, annotation_id=None):
     """Main annotation interface - shows one annotation at a time"""
@@ -27,18 +32,63 @@ def annotation_list(request, annotation_id=None):
         is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
         
         try:
+            # Get session ID for tracking
+            session_id = request.session.session_key
+            if not session_id:
+                request.session.create()
+                session_id = request.session.session_key
+            
+            # Store old values for change tracking
+            old_drugs = annotation.drugs.copy()
+            old_events = annotation.adverse_events.copy()
+            old_validated = annotation.is_validated
+            
             # Handle drugs
             if 'drugs' in request.POST:
                 drugs_string = request.POST.get('drugs', '')
                 annotation.set_drugs_from_string(drugs_string)
+                
+                # Log drug changes
+                if old_drugs != annotation.drugs:
+                    # Find added drugs
+                    added_drugs = [drug for drug in annotation.drugs if drug not in old_drugs]
+                    for drug in added_drugs:
+                        AnnotationChange.log_drug_change(
+                            annotation, 'drug_added', drug, old_drugs, annotation.drugs, session_id
+                        )
+                    
+                    # Find removed drugs
+                    removed_drugs = [drug for drug in old_drugs if drug not in annotation.drugs]
+                    for drug in removed_drugs:
+                        AnnotationChange.log_drug_change(
+                            annotation, 'drug_removed', drug, old_drugs, annotation.drugs, session_id
+                        )
             
             # Handle adverse events
             if 'adverse_events' in request.POST:
                 events_string = request.POST.get('adverse_events', '')
                 annotation.set_adverse_events_from_string(events_string)
+                
+                # Log event changes
+                if old_events != annotation.adverse_events:
+                    # Find added events
+                    added_events = [event for event in annotation.adverse_events if event not in old_events]
+                    for event in added_events:
+                        AnnotationChange.log_event_change(
+                            annotation, 'event_added', event, old_events, annotation.adverse_events, session_id
+                        )
+                    
+                    # Find removed events
+                    removed_events = [event for event in old_events if event not in annotation.adverse_events]
+                    for event in removed_events:
+                        AnnotationChange.log_event_change(
+                            annotation, 'event_removed', event, old_events, annotation.adverse_events, session_id
+                        )
             
-            # Handle validation status
-            annotation.is_validated = request.POST.get('is_validated') == 'on'
+            # Handle validation status (not tracked)
+            new_validated = request.POST.get('is_validated') == 'on'
+            if old_validated != new_validated:
+                annotation.is_validated = new_validated
             
             annotation.save()
             
@@ -91,6 +141,32 @@ def annotation_list(request, annotation_id=None):
     # Get current position
     current_position = TextAnnotation.objects.filter(id__lte=annotation.id).count()
     
+    # Get all annotation IDs for slider navigation
+    all_annotation_ids = list(TextAnnotation.objects.order_by('id').values_list('id', flat=True))
+    
+    # Get all unique drugs and ADEs from DB and data
+    all_drugs_set = set(d for ann in TextAnnotation.objects.all() for d in ann.drugs)
+    all_ades_set = set(a for ann in TextAnnotation.objects.all() for a in ann.adverse_events)
+    all_drugs_set.update(d.name for d in DrugListEntry.objects.all())
+    all_ades_set.update(a.name for a in ADEListEntry.objects.all())
+    all_drugs = sorted(list(all_drugs_set), key=str.lower)
+    all_ades = sorted(list(all_ades_set), key=str.lower)
+
+    # Quick add suggestions (Python logic)
+    text = annotation.text if annotation else ''
+    words = re.findall(r"\b\w[\w\-']*\b", text.lower())
+    annotated_drugs = set(d.lower() for d in annotation.drugs)
+    annotated_ades = set(a.lower() for a in annotation.adverse_events)
+    all_annotated = annotated_drugs | annotated_ades
+    def is_not_in_any_entity(word, entities):
+        return all(word not in entity for entity in entities)
+    quick_drug_suggestions = [w for w in words if w in (d.lower() for d in all_drugs)
+                             and w not in annotated_drugs
+                             and is_not_in_any_entity(w, all_annotated)]
+    quick_ade_suggestions = [w for w in words if w in (a.lower() for a in all_ades)
+                            and w not in annotated_ades
+                            and is_not_in_any_entity(w, all_annotated)]
+
     context = {
         'annotation': annotation,
         'prev_annotation': prev_annotation,
@@ -99,8 +175,13 @@ def annotation_list(request, annotation_id=None):
         'validated_count': validated_count,
         'unvalidated_count': unvalidated_count,
         'current_position': current_position,
+        'all_annotation_ids': json.dumps(all_annotation_ids),
         'progress_percentage': int((current_position / total_count) * 100) if total_count > 0 else 0,
         'validation_percentage': int((validated_count / total_count) * 100) if total_count > 0 else 0,
+        'all_drugs': all_drugs,
+        'all_ades': all_ades,
+        'quick_drug_suggestions': quick_drug_suggestions,
+        'quick_ade_suggestions': quick_ade_suggestions,
     }
     
     return render(request, 'annotation/list.html', context)
@@ -115,7 +196,16 @@ def import_jsonl(request):
     """View to import data from JSONL file"""
     if request.method == 'POST':
         try:
-            file_path = request.POST.get('file_path', 'extracted_data.jsonl')
+            uploaded_file = request.FILES.get('jsonl_file')
+            
+            if not uploaded_file:
+                messages.error(request, 'Please select a file to upload.')
+                return render(request, 'annotation/import.html', {'current_count': TextAnnotation.objects.count()})
+            
+            # Validate file extension
+            if not uploaded_file.name.lower().endswith(('.jsonl', '.json')):
+                messages.error(request, 'Please upload a .jsonl or .json file.')
+                return render(request, 'annotation/import.html', {'current_count': TextAnnotation.objects.count()})
             
             with transaction.atomic():
                 # Clear existing data if requested
@@ -123,31 +213,41 @@ def import_jsonl(request):
                     TextAnnotation.objects.all().delete()
                 
                 imported_count = 0
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    for line_num, line in enumerate(file, 1):
-                        try:
-                            line = line.strip()
-                            if line:
-                                data = json.loads(line)
-                                annotation = TextAnnotation(
-                                    text=data.get('text', ''),
-                                    drugs=data.get('drugs', []),
-                                    adverse_events=data.get('adverse_events', [])
-                                )
-                                annotation.save()
-                                imported_count += 1
-                        except json.JSONDecodeError as e:
-                            messages.warning(request, f'Skipped invalid JSON on line {line_num}: {str(e)}')
-                        except Exception as e:
-                            messages.warning(request, f'Error importing line {line_num}: {str(e)}')
+                skipped_count = 0
                 
-                messages.success(request, f'Successfully imported {imported_count} annotations!')
+                # Read file content
+                file_content = uploaded_file.read().decode('utf-8')
+                lines = file_content.strip().split('\n')
+                
+                for line_num, line in enumerate(lines, 1):
+                    try:
+                        line = line.strip()
+                        if line:
+                            data = json.loads(line)
+                            annotation = TextAnnotation(
+                                text=data.get('text', ''),
+                                drugs=data.get('drugs', []),
+                                adverse_events=data.get('adverse_events', [])
+                            )
+                            annotation.save()
+                            imported_count += 1
+                    except json.JSONDecodeError as e:
+                        skipped_count += 1
+                        messages.warning(request, f'Skipped invalid JSON on line {line_num}: {str(e)}')
+                    except Exception as e:
+                        skipped_count += 1
+                        messages.warning(request, f'Error importing line {line_num}: {str(e)}')
+                
+                # Success message
+                success_msg = f'Successfully imported {imported_count} annotations!'
+                if skipped_count > 0:
+                    success_msg += f' ({skipped_count} lines skipped due to errors)'
+                
+                messages.success(request, success_msg)
                 return redirect('annotation_list')
                 
-        except FileNotFoundError:
-            messages.error(request, f'File not found: {file_path}')
         except Exception as e:
-            messages.error(request, f'Error importing file: {str(e)}')
+            messages.error(request, f'Error processing file: {str(e)}')
     
     context = {
         'current_count': TextAnnotation.objects.count(),
@@ -263,17 +363,211 @@ def annotation_stats(request):
     for event in all_events:
         event_stats[event] = event_stats.get(event, 0) + 1
     
+    # --- Change statistics ---
+    from django.db.models import Count
+    change_qs = AnnotationChange.objects.all()
+    total_changes = change_qs.count()
+    drug_additions = change_qs.filter(change_type='drug_added').count()
+    drug_removals = change_qs.filter(change_type='drug_removed').count()
+    event_additions = change_qs.filter(change_type='event_added').count()
+    event_removals = change_qs.filter(change_type='event_removed').count()
+    bulk_updates = change_qs.filter(change_type='bulk_update').count()
+
+    # Most active annotations (by number of changes)
+    most_active_annotations = (
+        TextAnnotation.objects.annotate(num_changes=Count('changes'))
+        .order_by('-num_changes')[:5]
+    )
+
+    # Recent changes
+    recent_changes = AnnotationChange.objects.select_related('annotation').order_by('-timestamp')[:10]
+
     context = {
-        'total_count': total_count,
-        'validated_count': validated_count,
-        'unvalidated_count': unvalidated_count,
-        'validation_percentage': int((validated_count / total_count) * 100) if total_count > 0 else 0,
-        'drug_stats': sorted(drug_stats.items(), key=lambda x: x[1], reverse=True)[:10],
-        'event_stats': sorted(event_stats.items(), key=lambda x: x[1], reverse=True)[:10],
-        'unique_drugs': len(drug_stats),
-        'unique_events': len(event_stats),
+        'total_annotations': total_count,
+        'validated_annotations': validated_count,
+        'unvalidated_annotations': unvalidated_count,
+        'validation_percentage': (validated_count / total_count * 100) if total_count > 0 else 0,
+        'top_drugs': sorted(drug_stats.items(), key=lambda x: x[1], reverse=True)[:10],
+        'top_events': sorted(event_stats.items(), key=lambda x: x[1], reverse=True)[:10],
+        'total_unique_drugs': len(drug_stats),
+        'total_unique_events': len(event_stats),
         'total_drugs': len(all_drugs),
         'total_events': len(all_events),
+        # Change stats
+        'total_changes': total_changes,
+        'drug_additions': drug_additions,
+        'drug_removals': drug_removals,
+        'event_additions': event_additions,
+        'event_removals': event_removals,
+        'bulk_updates': bulk_updates,
+        'most_active_annotations': most_active_annotations,
+        'recent_changes': recent_changes,
     }
     
     return render(request, 'annotation/stats.html', context)
+
+
+def annotation_changes(request, annotation_id=None):
+    """View to display change history for annotations"""
+    if annotation_id:
+        # Show changes for specific annotation
+        annotation = get_object_or_404(TextAnnotation, id=annotation_id)
+        changes = annotation.changes.all()
+        
+        # Calculate text differences for this annotation
+        text_with_changes = calculate_text_changes(annotation, changes)
+        
+        context = {
+            'annotation': annotation,
+            'changes': changes,
+            'text_with_changes': text_with_changes,
+            'show_specific': True
+        }
+    else:
+        # Show grouped changes across all annotations
+        from django.db.models import Count, Max
+        
+        # Get filter parameters
+        change_type = request.GET.get('change_type')
+        
+        # Group changes by annotation
+        annotations_with_changes = TextAnnotation.objects.filter(
+            changes__isnull=False
+        ).annotate(
+            total_changes=Count('changes'),
+            last_change=Max('changes__timestamp')
+        ).order_by('-last_change')
+        
+        # Apply change type filter if specified
+        if change_type:
+            annotations_with_changes = annotations_with_changes.filter(
+                changes__change_type=change_type
+            ).distinct()
+        
+        # Get detailed changes for each annotation
+        annotation_summaries = []
+        for annotation in annotations_with_changes:
+            changes = annotation.changes.all().order_by('-timestamp')
+            if change_type:
+                changes = changes.filter(change_type=change_type)
+            
+            # Calculate text differences
+            text_with_changes = calculate_text_changes(annotation, changes)
+            
+            # Group changes by type
+            change_summary = {
+                'drug_additions': changes.filter(change_type='drug_added').count(),
+                'drug_removals': changes.filter(change_type='drug_removed').count(),
+                'event_additions': changes.filter(change_type='event_added').count(),
+                'event_removals': changes.filter(change_type='event_removed').count(),
+                'total_changes': changes.count(),
+                'last_change': changes.first().timestamp if changes.exists() else None,
+            }
+            
+            annotation_summaries.append({
+                'annotation': annotation,
+                'changes': changes,
+                'summary': change_summary,
+                'text_with_changes': text_with_changes
+            })
+        
+        # Pagination
+        paginator = Paginator(annotation_summaries, 20)  # Show 20 annotations per page
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        context = {
+            'annotation_summaries': page_obj,
+            'show_specific': False,
+            'change_types': AnnotationChange.CHANGE_TYPES,
+            'selected_change_type': change_type
+        }
+    
+    return render(request, 'annotation/changes.html', context)
+
+
+def calculate_text_changes(annotation, changes):
+    """Calculate text differences showing added and removed entities"""
+    original_text = annotation.text
+
+    # Track all entities that were ever added or removed, and their type
+    added_drugs = set()
+    added_ades = set()
+    removed_drugs = set()
+    removed_ades = set()
+
+    for change in changes:
+        if change.change_type == 'drug_added' and change.entity_name:
+            added_drugs.add(change.entity_name)
+        elif change.change_type == 'drug_removed' and change.entity_name:
+            removed_drugs.add(change.entity_name)
+        elif change.change_type == 'event_added' and change.entity_name:
+            added_ades.add(change.entity_name)
+        elif change.change_type == 'event_removed' and change.entity_name:
+            removed_ades.add(change.entity_name)
+
+    # Convert to sorted lists (longest first)
+    removed_drugs = sorted(removed_drugs, key=len, reverse=True)
+    removed_ades = sorted(removed_ades, key=len, reverse=True)
+    added_drugs = sorted(added_drugs, key=len, reverse=True)
+    added_ades = sorted(added_ades, key=len, reverse=True)
+
+    highlighted_text = original_text
+
+    # Highlight removed drugs (crossed out, green)
+    for entity in removed_drugs:
+        escaped_entity = re.escape(entity)
+        pattern = re.compile(escaped_entity, re.IGNORECASE)
+        highlighted_text = pattern.sub(f'<span class="removed-drug">{entity}</span>', highlighted_text)
+    # Highlight removed ADEs (crossed out, red)
+    for entity in removed_ades:
+        escaped_entity = re.escape(entity)
+        pattern = re.compile(escaped_entity, re.IGNORECASE)
+        highlighted_text = pattern.sub(f'<span class="removed-ade">{entity}</span>', highlighted_text)
+    # Highlight added drugs (green)
+    for entity in added_drugs:
+        escaped_entity = re.escape(entity)
+        pattern = re.compile(escaped_entity, re.IGNORECASE)
+        highlighted_text = pattern.sub(f'<span class="added-drug">{entity}</span>', highlighted_text)
+    # Highlight added ADEs (red/pink)
+    for entity in added_ades:
+        escaped_entity = re.escape(entity)
+        pattern = re.compile(escaped_entity, re.IGNORECASE)
+        highlighted_text = pattern.sub(f'<span class="added-ade">{entity}</span>', highlighted_text)
+
+    return highlighted_text
+
+
+def upload_drug_list(request):
+    from django.shortcuts import redirect
+    from django.contrib import messages
+    if request.method == 'POST' and request.FILES.get('drug_file'):
+        file = request.FILES['drug_file']
+        content = file.read().decode('utf-8')
+        added = 0
+        for line in content.splitlines():
+            drug = line.strip()
+            if drug:
+                obj, created = DrugListEntry.objects.get_or_create(name=drug)
+                if created:
+                    added += 1
+        messages.success(request, f'Drug list uploaded! {added} new drugs added.')
+        return redirect('annotation_list')
+    return render(request, 'annotation/upload_drugs.html')
+
+def upload_ade_list(request):
+    from django.shortcuts import redirect
+    from django.contrib import messages
+    if request.method == 'POST' and request.FILES.get('ade_file'):
+        file = request.FILES['ade_file']
+        content = file.read().decode('utf-8')
+        added = 0
+        for line in content.splitlines():
+            ade = line.strip()
+            if ade:
+                obj, created = ADEListEntry.objects.get_or_create(name=ade)
+                if created:
+                    added += 1
+        messages.success(request, f'ADE list uploaded! {added} new ADEs added.')
+        return redirect('annotation_list')
+    return render(request, 'annotation/upload_ades.html')

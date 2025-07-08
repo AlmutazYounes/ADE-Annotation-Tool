@@ -4,123 +4,258 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-8 offset-md-2">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fas fa-upload"></i> Import JSONL Data</h3>
+    <div class="col-md-6 offset-md-3">
+        <div class="import-container">
+            <div class="text-center mb-4">
+                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                <h2 class="mb-2">Import Medical Text Data</h2>
+                <p class="text-muted">Upload a JSONL file containing medical text annotations</p>
             </div>
-            <div class="card-body">
-                <p class="text-muted">
-                    Import your medical text annotations from a JSONL file. Each line should contain a JSON object 
-                    with "text", "drugs", and "adverse_events" fields.
-                </p>
 
-                <!-- Current Status -->
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle"></i> Current Database Status</h6>
-                    <p class="mb-0">
-                        There are currently <strong>{{ current_count }}</strong> annotations in the database.
-                    </p>
-                </div>
-
-                <!-- Import Form -->
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="file_path" class="form-label">
-                            <i class="fas fa-file"></i> JSONL File Path
-                        </label>
-                        <input type="text" class="form-control" id="file_path" name="file_path" 
-                               value="extracted_data.jsonl" required>
-                        <div class="form-text">
-                            Enter the path to your JSONL file. Default is "extracted_data.jsonl" in the project root.
-                        </div>
+            <!-- Current Status -->
+            <div class="status-card mb-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="mb-1">Current Database</h6>
+                        <span class="text-muted">{{ current_count }} annotations</span>
                     </div>
+                    <i class="fas fa-database fa-2x text-success"></i>
+                </div>
+            </div>
 
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="clear_existing" name="clear_existing">
-                            <label class="form-check-label" for="clear_existing">
-                                Clear existing data before import
-                            </label>
-                            <div class="form-text">
-                                <strong>Warning:</strong> This will delete all existing annotations before importing new data.
+            <!-- Import Form -->
+            <form method="post" enctype="multipart/form-data" class="import-form">
+                {% csrf_token %}
+                
+                <!-- File Upload -->
+                <div class="file-upload-area mb-4">
+                    <div class="file-input-wrapper">
+                        <input type="file" 
+                               class="file-input" 
+                               id="jsonl_file" 
+                               name="jsonl_file" 
+                               accept=".jsonl,.json"
+                               required>
+                        <label for="jsonl_file" class="file-input-label">
+                            <i class="fas fa-folder-open fa-2x mb-2"></i>
+                            <div class="file-text">
+                                <strong>Choose JSONL File</strong>
+                                <span class="text-muted d-block">Click to browse or drag & drop</span>
                             </div>
+                        </label>
+                    </div>
+                    <div class="file-info mt-2" id="file-info" style="display: none;">
+                        <i class="fas fa-file-alt"></i>
+                        <span id="file-name"></span>
+                        <span class="text-muted" id="file-size"></span>
+                    </div>
+                </div>
+
+                <!-- Clear Existing Option -->
+                <div class="option-card mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="clear_existing" name="clear_existing">
+                        <label class="form-check-label" for="clear_existing">
+                            <strong>Replace existing data</strong>
+                            <span class="text-muted d-block">Clear all current annotations before import</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <a href="{% url 'annotation_list' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-upload me-2"></i> Import Data
+                    </button>
+                </div>
+            </form>
+
+            <!-- Upload Drug List -->
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h5><i class="fas fa-pills"></i> Upload Drug List</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="{% url 'upload_drug_list' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="drug_file" class="form-label">Drug List File (one drug per line, plain text)</label>
+                            <input type="file" class="form-control" id="drug_file" name="drug_file" accept=".txt">
                         </div>
-                    </div>
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{% url 'annotation_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-upload"></i> Import Data
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Data Format Example -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5><i class="fas fa-code"></i> Expected JSONL Format</h5>
-            </div>
-            <div class="card-body">
-                <p>Each line in your JSONL file should be a valid JSON object with the following structure:</p>
-                
-                <pre class="bg-light p-3 rounded"><code>{
-  "text": "On cessation of the injections, the retrocorneal membrane grew rapidly to involve the entire posterior cornea.",
-  "drugs": [],
-  "adverse_events": ["retrocorneal membrane"]
-}
-
-{
-  "text": "A whole brain irradiation was performed for 37.5Gy with a fraction size of 2.5Gy and gefitinib was replaced with erlotinib on the 5th day after radiation therapy commenced for disease progressing.",
-  "drugs": ["gefitinib", "erlotinib"],
-  "adverse_events": []
-}</code></pre>
-
-                <div class="alert alert-warning mt-3">
-                    <h6><i class="fas fa-exclamation-triangle"></i> Important Notes:</h6>
-                    <ul class="mb-0">
-                        <li><strong>text</strong>: Required field containing the medical text</li>
-                        <li><strong>drugs</strong>: Array of drug names (can be empty)</li>
-                        <li><strong>adverse_events</strong>: Array of adverse event names (can be empty)</li>
-                        <li>Each line must be a separate, valid JSON object</li>
-                        <li>Invalid lines will be skipped with a warning message</li>
-                    </ul>
+                        <button type="submit" class="btn btn-primary">Upload Drug List</button>
+                    </form>
                 </div>
             </div>
-        </div>
 
-        <!-- Troubleshooting -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5><i class="fas fa-question-circle"></i> Troubleshooting</h5>
-            </div>
-            <div class="card-body">
-                <h6>Common Issues:</h6>
-                <dl>
-                    <dt>File not found error</dt>
-                    <dd>Make sure the file path is correct and the file exists in the specified location.</dd>
-                    
-                    <dt>JSON parsing errors</dt>
-                    <dd>Check that each line is valid JSON. Use a JSON validator if needed.</dd>
-                    
-                    <dt>Missing required fields</dt>
-                    <dd>Ensure each JSON object has at least a "text" field. "drugs" and "adverse_events" will default to empty arrays if missing.</dd>
-                    
-                    <dt>Permission errors</dt>
-                    <dd>Make sure the Django application has read access to the specified file.</dd>
-                </dl>
-                
-                <div class="alert alert-info">
-                    <strong>Tip:</strong> Start with a small test file to verify the format works correctly before importing large datasets.
+            <!-- Upload ADE List -->
+            <div class="card mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Upload ADE List</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="{% url 'upload_ade_list' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="ade_file" class="form-label">ADE List File (one ADE per line, plain text)</label>
+                            <input type="file" class="form-control" id="ade_file" name="ade_file" accept=".txt">
+                        </div>
+                        <button type="submit" class="btn btn-danger">Upload ADE List</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.import-container {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border: 1px solid #e3e6f0;
+}
+
+.status-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+}
+
+.file-upload-area {
+    position: relative;
+}
+
+.file-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.file-input-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    border: 2px dashed #007bff;
+    border-radius: 12px;
+    background: #f8f9ff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 30px;
+    text-align: center;
+}
+
+.file-input-label:hover {
+    border-color: #0056b3;
+    background: #e6f0ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+}
+
+.file-input-label i {
+    color: #007bff;
+    transition: all 0.3s ease;
+}
+
+.file-input-label:hover i {
+    color: #0056b3;
+    transform: scale(1.1);
+}
+
+.file-text strong {
+    font-size: 1.2rem;
+    color: #007bff;
+}
+
+.file-info {
+    background: #e6f7ff;
+    border: 1px solid #91d5ff;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-info i {
+    color: #1890ff;
+}
+
+.option-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+}
+
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    min-width: 140px;
+    padding: 12px 24px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108,117,125,0.2);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('jsonl_file');
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const fileLabel = document.querySelector('.file-input-label');
+
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.style.display = 'flex';
+            
+            // Update label appearance
+            fileLabel.style.borderColor = '#28a745';
+            fileLabel.style.background = '#e6ffed';
+            fileLabel.querySelector('i').style.color = '#28a745';
+            fileLabel.querySelector('strong').textContent = 'File Selected';
+            fileLabel.querySelector('.text-muted').textContent = 'Ready to import';
+        }
+    });
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+});
+</script>
 {% endblock %} 

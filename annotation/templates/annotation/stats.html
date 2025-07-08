@@ -52,6 +52,64 @@
             </div>
         </div>
 
+        <!-- Change Statistics Overview -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card text-center bg-dark text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-random"></i></h2>
+                        <h3>{{ total_changes }}</h3>
+                        <p class="mb-0">Total Changes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-success text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-plus-circle"></i></h2>
+                        <h3>{{ drug_additions }}</h3>
+                        <p class="mb-0">Drug Additions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-danger text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-minus-circle"></i></h2>
+                        <h3>{{ drug_removals }}</h3>
+                        <p class="mb-0">Drug Removals</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-warning text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-plus-square"></i></h2>
+                        <h3>{{ event_additions }}</h3>
+                        <p class="mb-0">ADE Additions</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-danger text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-minus-square"></i></h2>
+                        <h3>{{ event_removals }}</h3>
+                        <p class="mb-0">ADE Removals</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center bg-secondary text-white">
+                    <div class="card-body">
+                        <h2><i class="fas fa-layer-group"></i></h2>
+                        <h3>{{ bulk_updates }}</h3>
+                        <p class="mb-0">Bulk Updates</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Progress Bar -->
         <div class="card mb-4">
             <div class="card-header">
@@ -198,6 +256,80 @@
                         {% endif %}
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Most Active Annotations Table -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-fire"></i> Most Active Annotations</h5>
+            </div>
+            <div class="card-body">
+                {% if most_active_annotations %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Annotation ID</th>
+                                    <th>Text Preview</th>
+                                    <th>Number of Changes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for annotation in most_active_annotations %}
+                                    <tr>
+                                        <td><a href="{% url 'annotation_changes_specific' annotation.id %}">#{{ annotation.id }}</a></td>
+                                        <td>{{ annotation.text|truncatechars:40 }}</td>
+                                        <td>{{ annotation.num_changes }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-fire fa-2x mb-2"></i>
+                        <p>No annotation changes yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Changes Table -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5><i class="fas fa-history"></i> Recent Changes</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_changes %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Annotation ID</th>
+                                    <th>Type</th>
+                                    <th>Entity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for change in recent_changes %}
+                                    <tr>
+                                        <td>{{ change.timestamp|date:"Y-m-d H:i" }}</td>
+                                        <td><a href="{% url 'annotation_changes_specific' change.annotation.id %}">#{{ change.annotation.id }}</a></td>
+                                        <td>{{ change.get_change_type_display }}</td>
+                                        <td>{{ change.entity_name|default:"-" }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-history fa-2x mb-2"></i>
+                        <p>No recent changes yet.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
