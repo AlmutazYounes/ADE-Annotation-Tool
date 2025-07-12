@@ -537,9 +537,34 @@
                 <a class="nav-link" href="{% url 'import_jsonl' %}">
                     <i class="fas fa-cloud-upload-alt"></i> Import
                 </a>
-                <a class="nav-link" href="{% url 'export_jsonl' %}">
-                    <i class="fas fa-cloud-download-alt"></i> Export
-                </a>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-cloud-download-alt"></i> Export
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header">Export Options</h6></li>
+                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=annotated">
+                            <i class="fas fa-tags text-success"></i> Annotated Only
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=validated">
+                            <i class="fas fa-check-circle text-primary"></i> Validated Only
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=annotated_validated">
+                            <i class="fas fa-certificate text-warning"></i> Annotated & Validated
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=modified">
+                            <i class="fas fa-edit text-info"></i> Modified Only
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=all">
+                            <i class="fas fa-download text-muted"></i> All Texts
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'export_entities_jsonl' %}">
+                            <i class="fas fa-code text-secondary"></i> Export Entities Format
+                        </a></li>
+                    </ul>
+                </div>
                 <a class="nav-link" href="{% url 'annotation_stats' %}">
                     <i class="fas fa-chart-line"></i> Analytics
                 </a>

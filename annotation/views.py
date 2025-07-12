@@ -3,9 +3,9 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q, Count, Max
 from .models import TextAnnotation, AnnotationChange, DrugListEntry, ADEListEntry
 import json
-from django.db.models import Count, Max
 import re
 
 # Global sets for uploaded drugs/ADEs, initialized from data
@@ -258,11 +258,40 @@ def import_jsonl(request):
 def export_jsonl(request):
     """View to export data to JSONL format"""
     try:
+        # Get filter type from query parameters
+        filter_type = request.GET.get('filter', 'all')
+        
+        # Start with all annotations
         annotations = TextAnnotation.objects.all()
+        
+        # Apply filters based on the filter_type
+        if filter_type == 'annotated':
+            # Only export texts that have drugs or adverse events
+            annotations = annotations.exclude(Q(drugs=[]) & Q(adverse_events=[]))
+        elif filter_type == 'validated':
+            # Only export validated annotations
+            annotations = annotations.filter(is_validated=True)
+        elif filter_type == 'annotated_validated':
+            # Only export texts that are both annotated and validated
+            annotations = annotations.exclude(Q(drugs=[]) & Q(adverse_events=[])).filter(is_validated=True)
+        elif filter_type == 'modified':
+            # Only export texts that have been modified (have changes tracked)
+            annotations = annotations.filter(changes__isnull=False).distinct()
+        # 'all' or any other value exports everything (default behavior)
+        
+        # Determine filename based on filter
+        filter_names = {
+            'annotated': 'annotated_only',
+            'validated': 'validated_only', 
+            'annotated_validated': 'annotated_validated',
+            'modified': 'modified_only',
+            'all': 'all'
+        }
+        filename_suffix = filter_names.get(filter_type, 'all')
         
         # Create response
         response = HttpResponse(content_type='application/json')
-        response['Content-Disposition'] = 'attachment; filename="exported_annotations.jsonl"'
+        response['Content-Disposition'] = f'attachment; filename="exported_annotations_{filename_suffix}.jsonl"'
         
         for annotation in annotations:
             data = {
@@ -272,7 +301,14 @@ def export_jsonl(request):
             }
             response.write(json.dumps(data, ensure_ascii=False) + '\n')
         
-        messages.success(request, f'Successfully exported {annotations.count()} annotations!')
+        total_count = TextAnnotation.objects.count()
+        exported_count = annotations.count()
+        
+        if filter_type == 'all':
+            messages.success(request, f'Successfully exported all {exported_count} annotations!')
+        else:
+            messages.success(request, f'Successfully exported {exported_count} {filter_type} annotations out of {total_count} total!')
+        
         return response
         
     except Exception as e:

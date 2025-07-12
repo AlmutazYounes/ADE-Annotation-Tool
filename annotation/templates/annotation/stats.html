@@ -369,9 +369,30 @@
                                 </a>
                             {% endif %}
                             <div class="btn-group" role="group">
-                                <a href="{% url 'export_jsonl' %}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-download"></i> Export
-                                </a>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><h6 class="dropdown-header">Export Options</h6></li>
+                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=annotated">
+                                            <i class="fas fa-tags text-success"></i> Annotated Only ({{ total_annotations|add:"-"|add:validated_annotations }} texts)
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=validated">
+                                            <i class="fas fa-check-circle text-primary"></i> Validated Only ({{ validated_annotations }} texts)
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=annotated_validated">
+                                            <i class="fas fa-certificate text-warning"></i> Annotated & Validated
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=modified">
+                                            <i class="fas fa-edit text-info"></i> Modified Only
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=all">
+                                            <i class="fas fa-download text-muted"></i> All Texts ({{ total_annotations }})
+                                        </a></li>
+                                    </ul>
+                                </div>
                                 <a href="{% url 'export_entities_jsonl' %}" class="btn btn-sm btn-outline-secondary">
                                     <i class="fas fa-code"></i> Export Entities
                                 </a>
