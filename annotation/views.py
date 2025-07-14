@@ -227,7 +227,8 @@ def import_jsonl(request):
                             annotation = TextAnnotation(
                                 text=data.get('text', ''),
                                 drugs=data.get('drugs', []),
-                                adverse_events=data.get('adverse_events', [])
+                                adverse_events=data.get('adverse_events', []),
+                                is_validated=data.get('is_validated', False)
                             )
                             annotation.save()
                             imported_count += 1
@@ -297,7 +298,8 @@ def export_jsonl(request):
             data = {
                 'text': annotation.text,
                 'drugs': annotation.drugs,
-                'adverse_events': annotation.adverse_events
+                'adverse_events': annotation.adverse_events,
+                'is_validated': annotation.is_validated
             }
             response.write(json.dumps(data, ensure_ascii=False) + '\n')
         
@@ -364,7 +366,8 @@ def export_entities_jsonl(request):
             
             data = {
                 'text': annotation.text,
-                'entities': entities
+                'entities': entities,
+                'is_validated': annotation.is_validated
             }
             response.write(json.dumps(data, ensure_ascii=False) + '\n')
         
