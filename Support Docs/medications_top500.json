@@ -1,0 +1,1794 @@
+[
+  {
+    "generic": "abacavir",
+    "brand": "Epzicom; Triumeq"
+  },
+  {
+    "generic": "aceclofenac",
+    "brand": ""
+  },
+  {
+    "generic": "acetazolamide",
+    "brand": ""
+  },
+  {
+    "generic": "acetylsalicylic acid",
+    "brand": "Alka-Seltzer; Anacin"
+  },
+  {
+    "generic": "aciclovir",
+    "brand": "Sitavig; Xerese"
+  },
+  {
+    "generic": "activated charcoal",
+    "brand": "Actidose; CharcoCaps"
+  },
+  {
+    "generic": "acyclovir",
+    "brand": "Sitavig; Xerese"
+  },
+  {
+    "generic": "albendazole",
+    "brand": "Albenza; Valbazen"
+  },
+  {
+    "generic": "allopurinol",
+    "brand": "Aloprim; Duzallo"
+  },
+  {
+    "generic": "alpha tocopherol acetate",
+    "brand": "Carni Q-Gel Forte; Infuvite"
+  },
+  {
+    "generic": "aluminium diacetate",
+    "brand": ""
+  },
+  {
+    "generic": "aluminium hydroxide",
+    "brand": "Acid Gone; Almacone"
+  },
+  {
+    "generic": "amethocaine",
+    "brand": "Altacaine; Cetacaine"
+  },
+  {
+    "generic": "amiloride  hydrochlorothiazide",
+    "brand": ""
+  },
+  {
+    "generic": "aminocaproic acid",
+    "brand": "Amicar"
+  },
+  {
+    "generic": "aminophylline",
+    "brand": ""
+  },
+  {
+    "generic": "amiodarone",
+    "brand": "Cordarone; Nexterone"
+  },
+  {
+    "generic": "amitriptyline",
+    "brand": "Elavil"
+  },
+  {
+    "generic": "amlodipine",
+    "brand": "Azor; Caduet"
+  },
+  {
+    "generic": "amlodipine  valsartan",
+    "brand": "Exforge"
+  },
+  {
+    "generic": "amlodipine  valsartan  hydrochlorothiazide",
+    "brand": "Exforge HCT"
+  },
+  {
+    "generic": "amoxycillin",
+    "brand": "Amoxi Drop; Amoxi-tabs"
+  },
+  {
+    "generic": "amphotericin b",
+    "brand": "Abelcet; AmBisome"
+  },
+  {
+    "generic": "ampicillin  cloxacillin",
+    "brand": ""
+  },
+  {
+    "generic": "anastrozole",
+    "brand": "Arimidex"
+  },
+  {
+    "generic": "antazoline  naphazoline",
+    "brand": ""
+  },
+  {
+    "generic": "artemether",
+    "brand": "Coartem"
+  },
+  {
+    "generic": "artemether  lumefantrine",
+    "brand": "Coartem"
+  },
+  {
+    "generic": "artesunate",
+    "brand": ""
+  },
+  {
+    "generic": "ascorbic acid",
+    "brand": "Ascor; C-Time"
+  },
+  {
+    "generic": "atenolol",
+    "brand": "Tenoretic; Tenormin"
+  },
+  {
+    "generic": "atorvastatin",
+    "brand": "Atorvaliq; Caduet"
+  },
+  {
+    "generic": "atracurium",
+    "brand": ""
+  },
+  {
+    "generic": "atropine",
+    "brand": "Atropen; Donnatal"
+  },
+  {
+    "generic": "azathioprine",
+    "brand": "Azasan; Imuran"
+  },
+  {
+    "generic": "azithromycin",
+    "brand": "AzaSite; Zithromax"
+  },
+  {
+    "generic": "baclofen 10mg tablet",
+    "brand": ""
+  },
+  {
+    "generic": "beclomethasone",
+    "brand": "Beconase; Qnasl"
+  },
+  {
+    "generic": "beclomethasone dipropionate",
+    "brand": "Beconase; Qnasl"
+  },
+  {
+    "generic": "bendrofluazide",
+    "brand": ""
+  },
+  {
+    "generic": "benzathine benzylpenicillin",
+    "brand": "Bicillin; Bicillin L-A"
+  },
+  {
+    "generic": "benzocaine",
+    "brand": "Alpha-caine; Americaine"
+  },
+  {
+    "generic": "benzoyl peroxide",
+    "brand": "Acanya; Acne-Clear"
+  },
+  {
+    "generic": "benzyl benzoate",
+    "brand": ""
+  },
+  {
+    "generic": "benzylpenicillin",
+    "brand": "Albadry; Bactracillin G"
+  },
+  {
+    "generic": "betamethasone",
+    "brand": "Betagen brand of Betamethasone and Gentamicin; Betavet"
+  },
+  {
+    "generic": "betamethasone  clioquinol",
+    "brand": ""
+  },
+  {
+    "generic": "betamethasone  neomycin",
+    "brand": ""
+  },
+  {
+    "generic": "betamethasone neomycin",
+    "brand": ""
+  },
+  {
+    "generic": "betaxolol hydrochloride",
+    "brand": ""
+  },
+  {
+    "generic": "bevacizumab injection",
+    "brand": "Alymsys; Avastin"
+  },
+  {
+    "generic": "bicalutamide",
+    "brand": "Casodex"
+  },
+  {
+    "generic": "biperiden",
+    "brand": ""
+  },
+  {
+    "generic": "bisacodyl",
+    "brand": "Alophen Reformulated Jan 2008; Bisac-Evac"
+  },
+  {
+    "generic": "bleomycin",
+    "brand": ""
+  },
+  {
+    "generic": "brinzolamide",
+    "brand": "Azopt; Simbrinza"
+  },
+  {
+    "generic": "bromazepam",
+    "brand": ""
+  },
+  {
+    "generic": "bromhexine",
+    "brand": ""
+  },
+  {
+    "generic": "bromocriptine",
+    "brand": "Cycloset; Parlodel"
+  },
+  {
+    "generic": "bupivacaine",
+    "brand": "Exparel; Marcaine"
+  },
+  {
+    "generic": "calamine  zinc oxide",
+    "brand": ""
+  },
+  {
+    "generic": "calamine lotion",
+    "brand": ""
+  },
+  {
+    "generic": "calcium gluconate",
+    "brand": "Calgonate"
+  },
+  {
+    "generic": "calcium lactate",
+    "brand": ""
+  },
+  {
+    "generic": "candesartan cilexetil",
+    "brand": "Atacand; Atacand HCT"
+  },
+  {
+    "generic": "captopril",
+    "brand": ""
+  },
+  {
+    "generic": "carbamazepine",
+    "brand": "Carbatrol; Epitol"
+  },
+  {
+    "generic": "carbimazole",
+    "brand": ""
+  },
+  {
+    "generic": "carboplatin",
+    "brand": "Paraplatin"
+  },
+  {
+    "generic": "carvedilol 25mg tablet",
+    "brand": "Coreg"
+  },
+  {
+    "generic": "cefixime",
+    "brand": "Suprax"
+  },
+  {
+    "generic": "cefotaxime",
+    "brand": "Claforan"
+  },
+  {
+    "generic": "ceftazidime",
+    "brand": "Avycaz; Fortaz"
+  },
+  {
+    "generic": "ceftriaxone",
+    "brand": ""
+  },
+  {
+    "generic": "cefuroxime",
+    "brand": ""
+  },
+  {
+    "generic": "celecoxib",
+    "brand": "Celebrex; Consensi"
+  },
+  {
+    "generic": "cephalexin",
+    "brand": "Keflex; Rilexine"
+  },
+  {
+    "generic": "chloramphenicol",
+    "brand": "Viceton"
+  },
+  {
+    "generic": "chlorhexidine",
+    "brand": "Avagard; Bactoshield"
+  },
+  {
+    "generic": "chlorhexidine  cetrimide",
+    "brand": ""
+  },
+  {
+    "generic": "chloroquine",
+    "brand": ""
+  },
+  {
+    "generic": "chloroxylenol",
+    "brand": "Absorbine Veterinary Liniment; Caricia Care"
+  },
+  {
+    "generic": "chlorpheniramine",
+    "brand": "Aller-Chlor; Chlor-Trimeton"
+  },
+  {
+    "generic": "chlorpromazine",
+    "brand": ""
+  },
+  {
+    "generic": "chlorpropamide",
+    "brand": ""
+  },
+  {
+    "generic": "chorionic gonadotropin",
+    "brand": ""
+  },
+  {
+    "generic": "cimetidine",
+    "brand": "Tagamet"
+  },
+  {
+    "generic": "cinnarizine",
+    "brand": ""
+  },
+  {
+    "generic": "ciprofloxacin",
+    "brand": "Cetraxal; Ciloxan"
+  },
+  {
+    "generic": "citalopram",
+    "brand": "Celexa"
+  },
+  {
+    "generic": "clarithromycin",
+    "brand": "Biaxin"
+  },
+  {
+    "generic": "clemastine",
+    "brand": "Clemasz; Dayhist-1"
+  },
+  {
+    "generic": "clindamycin",
+    "brand": "ANTIROBE; Acanya"
+  },
+  {
+    "generic": "clobetasol propionate",
+    "brand": "Clobex; Clodan"
+  },
+  {
+    "generic": "clobetasone",
+    "brand": ""
+  },
+  {
+    "generic": "clofazimine",
+    "brand": ""
+  },
+  {
+    "generic": "clofibrate",
+    "brand": ""
+  },
+  {
+    "generic": "clomiphene",
+    "brand": "Clomid"
+  },
+  {
+    "generic": "clomipramine",
+    "brand": "Anafranil; Calmera"
+  },
+  {
+    "generic": "clonazepam 2mg tablet",
+    "brand": "Klonopin"
+  },
+  {
+    "generic": "clotrimazole",
+    "brand": "Aardora Anti-Fungal Maximum Strength; Alevazol"
+  },
+  {
+    "generic": "cloxacillin",
+    "brand": "Dry Clox"
+  },
+  {
+    "generic": "coal tar",
+    "brand": "Ala Seb T; Balnetar"
+  },
+  {
+    "generic": "crotamiton",
+    "brand": "Crotan; Eurax"
+  },
+  {
+    "generic": "cyanocobalamin",
+    "brand": "Animi-3 with Vitamin D; BiferaRx"
+  },
+  {
+    "generic": "cyclopentolate",
+    "brand": "Cyclogyl; Cyclomydril"
+  },
+  {
+    "generic": "cyclophosphamides",
+    "brand": ""
+  },
+  {
+    "generic": "cytarabine",
+    "brand": "Vyxeos"
+  },
+  {
+    "generic": "daclatasvir",
+    "brand": ""
+  },
+  {
+    "generic": "danazol",
+    "brand": ""
+  },
+  {
+    "generic": "dapsone",
+    "brand": "Aczone"
+  },
+  {
+    "generic": "deferoxamine",
+    "brand": "Desferal"
+  },
+  {
+    "generic": "dequalinium",
+    "brand": ""
+  },
+  {
+    "generic": "desmopressin",
+    "brand": "DDAVP; Nocdurna"
+  },
+  {
+    "generic": "dexamethasone",
+    "brand": "Ciprodex; Decadron"
+  },
+  {
+    "generic": "dexamethasone  neomycin",
+    "brand": ""
+  },
+  {
+    "generic": "dextran 70",
+    "brand": "Bion Tears; Hyskon"
+  },
+  {
+    "generic": "dextromethorphan hydrobromide",
+    "brand": "Auvelity; Babee Cof"
+  },
+  {
+    "generic": "diazepam",
+    "brand": "Diastat; Libervant"
+  },
+  {
+    "generic": "diclofenac",
+    "brand": "Aleve Arthritis Pain; Arthrotec"
+  },
+  {
+    "generic": "diclofenac sodium",
+    "brand": "Aleve Arthritis Pain; Arthrotec"
+  },
+  {
+    "generic": "didanosine",
+    "brand": ""
+  },
+  {
+    "generic": "digoxin",
+    "brand": "Digitek; Digox"
+  },
+  {
+    "generic": "dimercaprol",
+    "brand": "BAL in Oil"
+  },
+  {
+    "generic": "dinoprostone",
+    "brand": "Cervidil; Prepidil"
+  },
+  {
+    "generic": "diphenoxylate hydrochloride  atropine sulphate",
+    "brand": "Lomotil"
+  },
+  {
+    "generic": "dipyridamole",
+    "brand": ""
+  },
+  {
+    "generic": "disopyramide",
+    "brand": "Norpace"
+  },
+  {
+    "generic": "dithranol",
+    "brand": "Drithocreme; Micanol"
+  },
+  {
+    "generic": "docetaxel",
+    "brand": "Beizray; Docefrez"
+  },
+  {
+    "generic": "docetaxel injection",
+    "brand": "Beizray; Docivyx"
+  },
+  {
+    "generic": "donepezil hcl",
+    "brand": "Aricept; Namzaric"
+  },
+  {
+    "generic": "dopamine",
+    "brand": ""
+  },
+  {
+    "generic": "dorzolamide",
+    "brand": "Cosopt; Trusopt"
+  },
+  {
+    "generic": "dorzolamide hcl  timolol",
+    "brand": "Cosopt"
+  },
+  {
+    "generic": "doxorubicin",
+    "brand": "Adriamycin; Caelyx"
+  },
+  {
+    "generic": "doxycycline",
+    "brand": "Acticlate; Adoxa"
+  },
+  {
+    "generic": "dutasteride",
+    "brand": "Avodart; Jalyn"
+  },
+  {
+    "generic": "edrophonium",
+    "brand": "Enlon; Enlon-Plus"
+  },
+  {
+    "generic": "efavirenz",
+    "brand": "Atripla; Sustiva"
+  },
+  {
+    "generic": "enalapril",
+    "brand": "Epaned; Vaseretic"
+  },
+  {
+    "generic": "enoxaparin",
+    "brand": "Lovenox"
+  },
+  {
+    "generic": "ephedrine",
+    "brand": "Akovaz; Bronkaid"
+  },
+  {
+    "generic": "ephedrine  theophylline",
+    "brand": ""
+  },
+  {
+    "generic": "epinephrine",
+    "brand": "Adrenaclick; Adrenalin"
+  },
+  {
+    "generic": "epirubicin",
+    "brand": "Ellence"
+  },
+  {
+    "generic": "ergocalciferol",
+    "brand": "Calcidol; Drisdol"
+  },
+  {
+    "generic": "ergometrine",
+    "brand": ""
+  },
+  {
+    "generic": "ergotamine",
+    "brand": "Cafergot; Ergomar"
+  },
+  {
+    "generic": "erythromycin",
+    "brand": "Benzamycin; E.E.S."
+  },
+  {
+    "generic": "erythropoietin",
+    "brand": "Epogen; Procrit"
+  },
+  {
+    "generic": "esomeprazole",
+    "brand": "Nexium; Vimovo"
+  },
+  {
+    "generic": "ethambutol 400mg tab",
+    "brand": "Myambutol"
+  },
+  {
+    "generic": "ethinyloestradiol",
+    "brand": "Annovera; EluRyng"
+  },
+  {
+    "generic": "ethosuximide",
+    "brand": "Zarontin"
+  },
+  {
+    "generic": "felodipine",
+    "brand": ""
+  },
+  {
+    "generic": "ferric ammonium citrate",
+    "brand": ""
+  },
+  {
+    "generic": "ferrous sulphate",
+    "brand": "Feosol; Fer-in-Sol"
+  },
+  {
+    "generic": "fexofenadine 120mg tablet",
+    "brand": ""
+  },
+  {
+    "generic": "fexofenadine 180mg tablet",
+    "brand": "Allegra; Wal-Fex"
+  },
+  {
+    "generic": "filgrastim",
+    "brand": "Granix; Neupogen"
+  },
+  {
+    "generic": "finasteride",
+    "brand": "Entadfi; Propecia"
+  },
+  {
+    "generic": "fluconazole",
+    "brand": "Diflucan"
+  },
+  {
+    "generic": "fludrocortisone",
+    "brand": ""
+  },
+  {
+    "generic": "flunitrazepam",
+    "brand": ""
+  },
+  {
+    "generic": "fluocinolone",
+    "brand": "Capex; Derma-Smoothe FS"
+  },
+  {
+    "generic": "fluorescein sodium",
+    "brand": "Altafluor; Flucaine"
+  },
+  {
+    "generic": "fluoxetine",
+    "brand": "Prozac; RECONCILE"
+  },
+  {
+    "generic": "flupenthixol",
+    "brand": ""
+  },
+  {
+    "generic": "fluphenazine",
+    "brand": ""
+  },
+  {
+    "generic": "fluvastatin",
+    "brand": "Lescol"
+  },
+  {
+    "generic": "folic acid",
+    "brand": "Animi-3 with Vitamin D; BiferaRx"
+  },
+  {
+    "generic": "framycetin",
+    "brand": ""
+  },
+  {
+    "generic": "frusemide",
+    "brand": "Disal; Furoscix"
+  },
+  {
+    "generic": "galantamine",
+    "brand": "Razadyne"
+  },
+  {
+    "generic": "gemcitabine",
+    "brand": "Infugem"
+  },
+  {
+    "generic": "gentamicin",
+    "brand": "Betagen brand of Betamethasone and Gentamicin; Garasol"
+  },
+  {
+    "generic": "gentamycin",
+    "brand": "Betagen brand of Betamethasone and Gentamicin; Garasol"
+  },
+  {
+    "generic": "gentian violet",
+    "brand": "Blu-Kote; Pad Kote"
+  },
+  {
+    "generic": "glibenclamide",
+    "brand": "Glynase"
+  },
+  {
+    "generic": "gliclazide",
+    "brand": ""
+  },
+  {
+    "generic": "glimepiride",
+    "brand": "Amaryl; Duetact"
+  },
+  {
+    "generic": "glucagon",
+    "brand": "Baqsimi; GlucaGen"
+  },
+  {
+    "generic": "glucose",
+    "brand": "Clinimix 2.75/5; Clinimix 4.25/10"
+  },
+  {
+    "generic": "glucose  sodium chloride",
+    "brand": ""
+  },
+  {
+    "generic": "glycerine thymol",
+    "brand": ""
+  },
+  {
+    "generic": "glyceryl trinitrate",
+    "brand": "Gonitro; Nitro-Bid"
+  },
+  {
+    "generic": "granisetron",
+    "brand": "Sancuso; Sustol"
+  },
+  {
+    "generic": "griseofulvin",
+    "brand": "Fulvicin P/G; Gris-PEG"
+  },
+  {
+    "generic": "haloperidol",
+    "brand": "Haldol"
+  },
+  {
+    "generic": "halothane",
+    "brand": ""
+  },
+  {
+    "generic": "heparin sodium",
+    "brand": "Defencath"
+  },
+  {
+    "generic": "hepatitis b vaccine",
+    "brand": "Engerix-B; Heplisav-B"
+  },
+  {
+    "generic": "hepatitis b vaccines",
+    "brand": "Engerix-B; Heplisav-B"
+  },
+  {
+    "generic": "hexetidine",
+    "brand": ""
+  },
+  {
+    "generic": "homatropine",
+    "brand": "Homatropaire; Hycodan"
+  },
+  {
+    "generic": "human albumin",
+    "brand": "Albuked; Albuminar"
+  },
+  {
+    "generic": "hydralazine",
+    "brand": "Bidil"
+  },
+  {
+    "generic": "hydrochlorothiazide",
+    "brand": "Accuretic; Aldactazide"
+  },
+  {
+    "generic": "hydrocortisone",
+    "brand": "A-Hydrocort; Ala-Cort"
+  },
+  {
+    "generic": "hydrocortisone  neomycin",
+    "brand": ""
+  },
+  {
+    "generic": "hydrocortisone  neomycin  polymyxin b",
+    "brand": "Casporyn HC; Cortisporin"
+  },
+  {
+    "generic": "hydroxyprogesterone",
+    "brand": "Makena"
+  },
+  {
+    "generic": "hydroxyurea",
+    "brand": "Droxia; Hydrea"
+  },
+  {
+    "generic": "hyoscine n butylbromide",
+    "brand": "Buscopan"
+  },
+  {
+    "generic": "ibuprofen",
+    "brand": "Addaprin; Advil"
+  },
+  {
+    "generic": "idoxuridine",
+    "brand": ""
+  },
+  {
+    "generic": "imipramine",
+    "brand": ""
+  },
+  {
+    "generic": "indinavir",
+    "brand": ""
+  },
+  {
+    "generic": "insulin glargine",
+    "brand": "Basaglar; Lantus"
+  },
+  {
+    "generic": "iodine",
+    "brand": "Absorbine Veterinary Liniment; Barrier-Dyne"
+  },
+  {
+    "generic": "ipratropium bromide",
+    "brand": "Atrovent; Combivent"
+  },
+  {
+    "generic": "irbesartan",
+    "brand": "Avalide; Avapro"
+  },
+  {
+    "generic": "irbesartan 150mg tablet",
+    "brand": "Avapro"
+  },
+  {
+    "generic": "iron dextran",
+    "brand": "InFed; Irospan Tablet"
+  },
+  {
+    "generic": "isoniazid 300mg tab",
+    "brand": ""
+  },
+  {
+    "generic": "isophane insulin",
+    "brand": "Humulin; Humulin N"
+  },
+  {
+    "generic": "isosorbide dinitrate",
+    "brand": "Bidil; IsoDitrate"
+  },
+  {
+    "generic": "isradipine",
+    "brand": ""
+  },
+  {
+    "generic": "itraconazole",
+    "brand": "Sporanox; Tolsura"
+  },
+  {
+    "generic": "ivermectin",
+    "brand": "Agrimectin; Bimectin"
+  },
+  {
+    "generic": "ketamine",
+    "brand": "Ketalar; Ketaset"
+  },
+  {
+    "generic": "ketoconazole",
+    "brand": "Extina; Keto-C"
+  },
+  {
+    "generic": "ketoprofen",
+    "brand": "Draxxin KP; Ketofen"
+  },
+  {
+    "generic": "ketorolac trometamol",
+    "brand": "Acular; Acuvail"
+  },
+  {
+    "generic": "ketotifen",
+    "brand": "Alaway; Claritin Eye"
+  },
+  {
+    "generic": "labetalol",
+    "brand": "Trandate"
+  },
+  {
+    "generic": "lacidipine",
+    "brand": ""
+  },
+  {
+    "generic": "lactulose",
+    "brand": "Constulose; Enulose"
+  },
+  {
+    "generic": "lamivudine",
+    "brand": "Cimduo; Combivir"
+  },
+  {
+    "generic": "lamivudine  nevirapine  stavudine",
+    "brand": ""
+  },
+  {
+    "generic": "lamivudine  nevirapine  zidovudine",
+    "brand": ""
+  },
+  {
+    "generic": "lamivudine  zidovudine",
+    "brand": "Combivir"
+  },
+  {
+    "generic": "latanoprost",
+    "brand": "Iyuzeh; Rocklatan"
+  },
+  {
+    "generic": "ledipasvir  sofosbuvir",
+    "brand": "Harvoni"
+  },
+  {
+    "generic": "letrozol",
+    "brand": "Femara"
+  },
+  {
+    "generic": "leucovorin",
+    "brand": ""
+  },
+  {
+    "generic": "levamisole",
+    "brand": "Valcor"
+  },
+  {
+    "generic": "levodopa  carbidopa",
+    "brand": "Crexont; Dhivy"
+  },
+  {
+    "generic": "levofloxacin",
+    "brand": "Levaquin"
+  },
+  {
+    "generic": "levothyroxine",
+    "brand": "Ermeza; Euthyrox"
+  },
+  {
+    "generic": "lidocaine",
+    "brand": "Abreva Rapid Pain Relief; Akten"
+  },
+  {
+    "generic": "lincomycin",
+    "brand": "Lincobac; Lincocin"
+  },
+  {
+    "generic": "liquid paraffin",
+    "brand": "Altalube; Kondremul Plain"
+  },
+  {
+    "generic": "lisinopril",
+    "brand": "Prinivil; Qbrelis"
+  },
+  {
+    "generic": "lisinopril  hydrochlorothiazide",
+    "brand": "Zestoretic"
+  },
+  {
+    "generic": "lithium carbonate",
+    "brand": "Lithobid"
+  },
+  {
+    "generic": "lodoxamide",
+    "brand": "Alomide"
+  },
+  {
+    "generic": "loperamide",
+    "brand": "Diamode; Imodium"
+  },
+  {
+    "generic": "lorazepam",
+    "brand": "Ativan; Loreev"
+  },
+  {
+    "generic": "losartan 25mg tablet",
+    "brand": "Cozaar"
+  },
+  {
+    "generic": "losartan 50mg tablet",
+    "brand": "Cozaar"
+  },
+  {
+    "generic": "magnesium sulphate",
+    "brand": "Concept OB; Eldertonic"
+  },
+  {
+    "generic": "magnesium trisilicate",
+    "brand": "Gaviscon Chewable"
+  },
+  {
+    "generic": "mannitol",
+    "brand": "Bronchitol; Osmitrol"
+  },
+  {
+    "generic": "mebendazole",
+    "brand": "Emverm; Vermox"
+  },
+  {
+    "generic": "medroxyprogesterone",
+    "brand": "Depo-Provera; Provera"
+  },
+  {
+    "generic": "meglumine antimonate",
+    "brand": ""
+  },
+  {
+    "generic": "memantine",
+    "brand": "Namenda; Namzaric"
+  },
+  {
+    "generic": "meropenem 500mg injection",
+    "brand": ""
+  },
+  {
+    "generic": "metformin",
+    "brand": "Actoplus Met; Glucophage"
+  },
+  {
+    "generic": "methotrexate",
+    "brand": "Jylamvo; Otrexup"
+  },
+  {
+    "generic": "methyl salicylate",
+    "brand": "Analgesic Balm GRX; Apeaz"
+  },
+  {
+    "generic": "methylcellulose",
+    "brand": "Citrucel"
+  },
+  {
+    "generic": "methyldopa",
+    "brand": ""
+  },
+  {
+    "generic": "methylene blue",
+    "brand": "Hyophen; Phosphasal"
+  },
+  {
+    "generic": "metoclopramide",
+    "brand": "Gimoti; Metozolv"
+  },
+  {
+    "generic": "metoprolol tartrate 50mg tab",
+    "brand": "Lopressor"
+  },
+  {
+    "generic": "metronidazole",
+    "brand": "Flagyl; Likmez"
+  },
+  {
+    "generic": "miconazole",
+    "brand": "Aloe Vesta Antifungal; Baza"
+  },
+  {
+    "generic": "miconazole  hydrocortisone",
+    "brand": ""
+  },
+  {
+    "generic": "misoprostol",
+    "brand": "Arthrotec; Cytotec"
+  },
+  {
+    "generic": "moclobemide",
+    "brand": ""
+  },
+  {
+    "generic": "monosulfiram",
+    "brand": ""
+  },
+  {
+    "generic": "montelukast",
+    "brand": "Singulair"
+  },
+  {
+    "generic": "morphine",
+    "brand": "Arymo; Astramorph"
+  },
+  {
+    "generic": "moxifloxacin",
+    "brand": "Avelox; Vigamox"
+  },
+  {
+    "generic": "naloxone",
+    "brand": "Bunavail; Kloxxado"
+  },
+  {
+    "generic": "naproxen",
+    "brand": "Aleve; Aleve PM"
+  },
+  {
+    "generic": "natamycin",
+    "brand": "Natacyn"
+  },
+  {
+    "generic": "nebivolol",
+    "brand": "Bystolic; Byvalson"
+  },
+  {
+    "generic": "nelfinavir",
+    "brand": "Viracept"
+  },
+  {
+    "generic": "neomycin sulfate  polymyxin b  dexamethasone",
+    "brand": "Maxitrol; Poly-Dex"
+  },
+  {
+    "generic": "neostigmine",
+    "brand": "Bloxiverz; Prevduo"
+  },
+  {
+    "generic": "nevirapine",
+    "brand": "Viramune"
+  },
+  {
+    "generic": "nifedipine",
+    "brand": "Afeditab CR; Procardia"
+  },
+  {
+    "generic": "nitrazepam",
+    "brand": ""
+  },
+  {
+    "generic": "nitrofurantoin",
+    "brand": "Furadantin; Macrobid"
+  },
+  {
+    "generic": "nitrous oxide",
+    "brand": ""
+  },
+  {
+    "generic": "norethisterone",
+    "brand": "Aygestin; Combipatch"
+  },
+  {
+    "generic": "nystatin",
+    "brand": "Bio-Statin; Nyamyc"
+  },
+  {
+    "generic": "ofloxacin",
+    "brand": "Floxin; Ocuflox"
+  },
+  {
+    "generic": "olanzapine",
+    "brand": "Lybalvi; Symbyax"
+  },
+  {
+    "generic": "olmesartan",
+    "brand": "Azor; Benicar"
+  },
+  {
+    "generic": "omeprazole",
+    "brand": "Konvomep; Prilosec"
+  },
+  {
+    "generic": "ondansetron",
+    "brand": "Zofran; Zuplenz"
+  },
+  {
+    "generic": "orphenadrine",
+    "brand": "Norgesic; Orphengesic"
+  },
+  {
+    "generic": "oxaliplatin",
+    "brand": ""
+  },
+  {
+    "generic": "oxaliplatin injection",
+    "brand": ""
+  },
+  {
+    "generic": "oxygen",
+    "brand": ""
+  },
+  {
+    "generic": "oxytocin",
+    "brand": "Pitocin"
+  },
+  {
+    "generic": "paclitaxel",
+    "brand": "Abraxane"
+  },
+  {
+    "generic": "pancuronium",
+    "brand": ""
+  },
+  {
+    "generic": "paracetamol",
+    "brand": "Acephen; Acetadryl"
+  },
+  {
+    "generic": "paraldehyde",
+    "brand": ""
+  },
+  {
+    "generic": "paroxetine",
+    "brand": "Brisdelle; Paxil"
+  },
+  {
+    "generic": "pefloxacin",
+    "brand": ""
+  },
+  {
+    "generic": "pentamidine",
+    "brand": "NebuPent; Pentam"
+  },
+  {
+    "generic": "pentazocine",
+    "brand": "Talwin"
+  },
+  {
+    "generic": "perindopril",
+    "brand": "Aceon; Prestalia"
+  },
+  {
+    "generic": "perindopril  indapamide",
+    "brand": ""
+  },
+  {
+    "generic": "permethrin",
+    "brand": "Acticin; Elimite"
+  },
+  {
+    "generic": "pertuzumab",
+    "brand": "Perjeta; Phesgo"
+  },
+  {
+    "generic": "pethidine",
+    "brand": "Demerol"
+  },
+  {
+    "generic": "phenobarbital",
+    "brand": "Donnatal; Fidoquel"
+  },
+  {
+    "generic": "phenoxymethyl penicillin",
+    "brand": ""
+  },
+  {
+    "generic": "phenylephrine",
+    "brand": "Alahist D; Benadryl Allergy Plus Congestion"
+  },
+  {
+    "generic": "phenytoin sodium",
+    "brand": "Dilantin; Euthaphen"
+  },
+  {
+    "generic": "phytomenadione",
+    "brand": "Infuvite; Infuvite Pediatric"
+  },
+  {
+    "generic": "pilocarpine",
+    "brand": "Isoptocarpine; Pilocar"
+  },
+  {
+    "generic": "pimozide",
+    "brand": ""
+  },
+  {
+    "generic": "pioglitazone hydrochloride",
+    "brand": ""
+  },
+  {
+    "generic": "piroxicam",
+    "brand": "Feldene"
+  },
+  {
+    "generic": "pizotifen",
+    "brand": ""
+  },
+  {
+    "generic": "podophyllum resin",
+    "brand": "Podocon"
+  },
+  {
+    "generic": "polygeline",
+    "brand": ""
+  },
+  {
+    "generic": "potassium chloride",
+    "brand": "Aminosyn 7 % with Electrolytes, Sulfite-Free; Aminosyn 8.5 % with Electrolytes, Sulfite-Free"
+  },
+  {
+    "generic": "potassium permanganate",
+    "brand": ""
+  },
+  {
+    "generic": "praziquantel",
+    "brand": "Biltricide; Centragard"
+  },
+  {
+    "generic": "prazosin",
+    "brand": "Minipress"
+  },
+  {
+    "generic": "prazosin  polythiazide",
+    "brand": ""
+  },
+  {
+    "generic": "prednisolone",
+    "brand": "Blephamide; Cortamine"
+  },
+  {
+    "generic": "pregabalin",
+    "brand": "Bonqat; Lyrica"
+  },
+  {
+    "generic": "prilocaine",
+    "brand": "Citanest; Citanest Forte"
+  },
+  {
+    "generic": "procainamide",
+    "brand": ""
+  },
+  {
+    "generic": "prochlorperazine",
+    "brand": "Compazine; Compro"
+  },
+  {
+    "generic": "proguanil",
+    "brand": "Malarone"
+  },
+  {
+    "generic": "promethazine",
+    "brand": "Phenadoz; Phenergan"
+  },
+  {
+    "generic": "propranolol",
+    "brand": "Hemangeol; Inderal"
+  },
+  {
+    "generic": "propylthiouracil",
+    "brand": ""
+  },
+  {
+    "generic": "protamine sulphate",
+    "brand": ""
+  },
+  {
+    "generic": "protamine zinc insulin",
+    "brand": "ProZinc"
+  },
+  {
+    "generic": "pseudoephedrine",
+    "brand": "A-Phedrin; Alavert D"
+  },
+  {
+    "generic": "pyrantel pamoate",
+    "brand": "Ascarel; Exodus"
+  },
+  {
+    "generic": "pyrazinamide 500mg tab",
+    "brand": ""
+  },
+  {
+    "generic": "pyridostigmine",
+    "brand": "Mestinon; Regonol"
+  },
+  {
+    "generic": "pyridoxine",
+    "brand": "Animi-3 with Vitamin D; Beelith"
+  },
+  {
+    "generic": "pyrimethamine",
+    "brand": "Daraprim; Rebalance"
+  },
+  {
+    "generic": "quinine",
+    "brand": "Qualaquin"
+  },
+  {
+    "generic": "rabeprazole",
+    "brand": "Aciphex"
+  },
+  {
+    "generic": "ramipril hydrochlorothiazide",
+    "brand": ""
+  },
+  {
+    "generic": "ranitidine",
+    "brand": "Zantac"
+  },
+  {
+    "generic": "reserpine  dihydroergocristine  clopamide",
+    "brand": ""
+  },
+  {
+    "generic": "retinol",
+    "brand": "Aquasol A; Infuvite"
+  },
+  {
+    "generic": "ribavirin 200mg tablet",
+    "brand": "Moderiba"
+  },
+  {
+    "generic": "riboflavin",
+    "brand": "Concept OB; Dialyvite 800"
+  },
+  {
+    "generic": "rifampicin",
+    "brand": "Rifadin"
+  },
+  {
+    "generic": "risperidone 1mg tablet",
+    "brand": "Risperdal"
+  },
+  {
+    "generic": "risperidone 2mg tablet",
+    "brand": "Risperdal"
+  },
+  {
+    "generic": "ritonavir",
+    "brand": "Kaletra; Norvir"
+  },
+  {
+    "generic": "rituximab",
+    "brand": "Riabni; Rituxan"
+  },
+  {
+    "generic": "rivastigmine",
+    "brand": "Exelon"
+  },
+  {
+    "generic": "rosiglitazone",
+    "brand": ""
+  },
+  {
+    "generic": "rosuvastatin",
+    "brand": "Crestor; Ezallor"
+  },
+  {
+    "generic": "salbutamol",
+    "brand": "Airsupra; Combivent"
+  },
+  {
+    "generic": "salicylic acid",
+    "brand": "AcneWorx; Acneclir"
+  },
+  {
+    "generic": "salmeterol",
+    "brand": "Advair; AirDuo"
+  },
+  {
+    "generic": "salmeterol  fluticasone",
+    "brand": "Advair; AirDuo"
+  },
+  {
+    "generic": "saquinavir",
+    "brand": ""
+  },
+  {
+    "generic": "saxagliptin  metformin",
+    "brand": "Kombiglyze"
+  },
+  {
+    "generic": "saxagliptin 5mg tablet",
+    "brand": "Onglyza"
+  },
+  {
+    "generic": "secnidazole",
+    "brand": "Solosec"
+  },
+  {
+    "generic": "senna",
+    "brand": "Black Draught; Colace w/Sennosides"
+  },
+  {
+    "generic": "sertraline",
+    "brand": "Zoloft"
+  },
+  {
+    "generic": "silver nitrate",
+    "brand": "Avoca; Styptstix"
+  },
+  {
+    "generic": "silver sulphadiazine",
+    "brand": "Baytril Otic; Enropro Silver"
+  },
+  {
+    "generic": "simvastatin",
+    "brand": "Flolipid; Vytorin"
+  },
+  {
+    "generic": "sitagliptin",
+    "brand": "Brynovin; Janumet"
+  },
+  {
+    "generic": "sodium bicarbonate",
+    "brand": "Alka-Seltzer; Bromo Seltzer Antacid Pain Reliever"
+  },
+  {
+    "generic": "sodium calcium edetate",
+    "brand": "Calcium Disodium Versenate"
+  },
+  {
+    "generic": "sodium chloride",
+    "brand": "Altamist; Aminosyn 3.5 % M, Sulfite Free"
+  },
+  {
+    "generic": "sodium fluoride",
+    "brand": "ACT Fluoride Rinse; Allday"
+  },
+  {
+    "generic": "sodium hypochlorite",
+    "brand": "Anasept; Di-Dak-Sol"
+  },
+  {
+    "generic": "sodium nitrite",
+    "brand": ""
+  },
+  {
+    "generic": "sodium stibogluconate",
+    "brand": ""
+  },
+  {
+    "generic": "sodium valproate",
+    "brand": ""
+  },
+  {
+    "generic": "sofosbuvir",
+    "brand": "Epclusa; Harvoni"
+  },
+  {
+    "generic": "sparfloxacin",
+    "brand": ""
+  },
+  {
+    "generic": "spironolactone",
+    "brand": "Aldactazide; Aldactone"
+  },
+  {
+    "generic": "stavudine",
+    "brand": ""
+  },
+  {
+    "generic": "suramin",
+    "brand": ""
+  },
+  {
+    "generic": "suxamethonium",
+    "brand": "Anectine; Quelicin"
+  },
+  {
+    "generic": "tamoxifen",
+    "brand": "Soltamox"
+  },
+  {
+    "generic": "tamsulosin",
+    "brand": "Flomax; Jalyn"
+  },
+  {
+    "generic": "telmisartan",
+    "brand": "Micardis; Micardis-HCT"
+  },
+  {
+    "generic": "tenoxicam",
+    "brand": ""
+  },
+  {
+    "generic": "terbinafine",
+    "brand": "Duotic; Lamisil"
+  },
+  {
+    "generic": "tetracycline",
+    "brand": "Pylera; Viabecline"
+  },
+  {
+    "generic": "tetrahydrozoline",
+    "brand": "Altazine; Optigene"
+  },
+  {
+    "generic": "theophylline",
+    "brand": "Elixophyllin; Theo-24"
+  },
+  {
+    "generic": "thiamine",
+    "brand": "Concept OB; Dialyvite 800"
+  },
+  {
+    "generic": "thiopental",
+    "brand": ""
+  },
+  {
+    "generic": "thioridazine",
+    "brand": ""
+  },
+  {
+    "generic": "timolol",
+    "brand": "Betimol; Combigan"
+  },
+  {
+    "generic": "tinidazole",
+    "brand": "Tindamax"
+  },
+  {
+    "generic": "tioconazole",
+    "brand": "Monistat Simple Therapy; Vagistat-1"
+  },
+  {
+    "generic": "tizanidine",
+    "brand": "Ontralfy; Zanaflex"
+  },
+  {
+    "generic": "torsemide",
+    "brand": "Soaanz; Upcard"
+  },
+  {
+    "generic": "tramadol",
+    "brand": "ConZip; Qdolo"
+  },
+  {
+    "generic": "trastuzumab",
+    "brand": "Enhertu; Herceptin"
+  },
+  {
+    "generic": "travoprost",
+    "brand": "Travatan; iDose"
+  },
+  {
+    "generic": "triamcinolone",
+    "brand": "Aller-Cort; AllerNaze"
+  },
+  {
+    "generic": "trifluoperazine",
+    "brand": ""
+  },
+  {
+    "generic": "triprolidine   pseudoephedrine",
+    "brand": "A-Phedrin; Aphedrid"
+  },
+  {
+    "generic": "tropicamide",
+    "brand": "Mydcombi; Mydriacyl"
+  },
+  {
+    "generic": "trypsin  chymotrypsin",
+    "brand": ""
+  },
+  {
+    "generic": "urea",
+    "brand": "Aluvea; Aqua Care"
+  },
+  {
+    "generic": "valproic acid",
+    "brand": ""
+  },
+  {
+    "generic": "vancomycin",
+    "brand": "Firvanq; Vancocin"
+  },
+  {
+    "generic": "vasopressin",
+    "brand": "Vasostrict"
+  },
+  {
+    "generic": "vildagliptin",
+    "brand": ""
+  },
+  {
+    "generic": "vincristine",
+    "brand": "Marqibo; Vincasar"
+  },
+  {
+    "generic": "vitamin b complex",
+    "brand": ""
+  },
+  {
+    "generic": "warfarin sodium",
+    "brand": "Coumadin; Jantoven"
+  },
+  {
+    "generic": "xeloda",
+    "brand": "Xeloda"
+  },
+  {
+    "generic": "xylometazoline",
+    "brand": ""
+  },
+  {
+    "generic": "xylometazoline  antazoline",
+    "brand": ""
+  },
+  {
+    "generic": "yellow fever vaccine",
+    "brand": "Stamaril; YF-Vax"
+  },
+  {
+    "generic": "zalcitabine",
+    "brand": ""
+  },
+  {
+    "generic": "zidovudine",
+    "brand": "Combivir; Retrovir"
+  },
+  {
+    "generic": "zinc sulphate",
+    "brand": "Concept OB; Eldertonic"
+  },
+  {
+    "generic": "zoledronic acid",
+    "brand": "Reclast"
+  },
+  {
+    "generic": "Metoprolol",
+    "brand": "Kapspargo; Lopressor"
+  },
+  {
+    "generic": "Losartan",
+    "brand": "Arbli; Cozaar"
+  },
+  {
+    "generic": "Gabapentin",
+    "brand": "Gabarone; Gralise"
+  },
+  {
+    "generic": "Amoxicillin",
+    "brand": "Amoxi Drop; Amoxi-tabs"
+  },
+  {
+    "generic": "Acetaminophen",
+    "brand": "Acephen; Acetadryl"
+  },
+  {
+    "generic": "Escitalopram",
+    "brand": "Lexapro"
+  },
+  {
+    "generic": "Pantoprazole",
+    "brand": "Protonix"
+  },
+  {
+    "generic": "Furosemide",
+    "brand": "Disal; Furoscix"
+  },
+  {
+    "generic": "Hydrocodone",
+    "brand": "Hy-KXP; Hycet"
+  },
+  {
+    "generic": "Prednisone",
+    "brand": "Deltasone; Rayos"
+  },
+  {
+    "generic": "Duloxetine",
+    "brand": "Cymbalta; Drizalma"
+  },
+  {
+    "generic": "Clopidogrel",
+    "brand": "Plavix"
+  },
+  {
+    "generic": "Carvedilol",
+    "brand": "Coreg"
+  },
+  {
+    "generic": "Meloxicam",
+    "brand": "Alloxate; Anjeso"
+  },
+  {
+    "generic": "Alprazolam",
+    "brand": "Xanax"
+  },
+  {
+    "generic": "Albuterol",
+    "brand": "Airsupra; Combivent"
+  }
+]

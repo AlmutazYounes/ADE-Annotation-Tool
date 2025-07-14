@@ -100,6 +100,8 @@
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: var(--space-md) 0;
+            position: relative;
+            z-index: 1040;
         }
         
         .navbar-brand {
@@ -516,6 +518,36 @@
         
         ::-webkit-scrollbar-thumb:hover {
             background: var(--gray-400);
+        }
+        
+        /* Fix dropdown z-index to appear above other elements */
+        .dropdown-menu {
+            z-index: 9999 !important;
+            position: absolute !important;
+        }
+        
+        .navbar .dropdown-menu {
+            z-index: 9999 !important;
+            position: absolute !important;
+        }
+        
+        .navbar .dropdown {
+            position: relative;
+        }
+        
+        /* Ensure dropdown appears above main content */
+        .main-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Specific fix for export dropdown */
+        .nav-item.dropdown .dropdown-menu {
+            z-index: 9999 !important;
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            transform: none !important;
         }
     </style>
 </head>
