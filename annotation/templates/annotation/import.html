@@ -3,131 +3,287 @@
 {% block title %}Import Data - Medical Data Annotation Tool{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <div class="import-container">
-            <div class="text-center mb-4">
-                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
-                <h2 class="mb-2">Import Medical Text Data</h2>
-                <p class="text-muted">Upload a JSONL file containing medical text annotations</p>
+<div class="import-page">
+    <!-- Header Section -->
+    <div class="import-header">
+        <div class="header-content">
+            <div class="header-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="header-text">
+                <h1>Import Medical Data</h1>
+                <p>Upload your JSONL files to start annotating medical text data</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="import-content">
+        <!-- Current Status Card -->
+        <div class="status-card">
+            <div class="status-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="status-info">
+                <h3>{{ current_count }}</h3>
+                <p>Current Annotations</p>
+            </div>
+        </div>
+
+        <!-- Main Import Section -->
+        <div class="import-section">
+            <div class="section-header">
+                <h2><i class="fas fa-file-import"></i> Import JSONL Data</h2>
+                <p>Upload your medical text annotations in JSONL format</p>
             </div>
 
-            <!-- Current Status -->
-            <div class="status-card mb-4">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h6 class="mb-1">Current Database</h6>
-                        <span class="text-muted">{{ current_count }} annotations</span>
-                    </div>
-                    <i class="fas fa-database fa-2x text-success"></i>
-                </div>
-            </div>
-
-            <!-- Import Form -->
             <form method="post" enctype="multipart/form-data" class="import-form">
                 {% csrf_token %}
                 
-                <!-- File Upload -->
-                <div class="file-upload-area mb-4">
-                    <div class="file-input-wrapper">
-                        <input type="file" 
-                               class="file-input" 
-                               id="jsonl_file" 
-                               name="jsonl_file" 
-                               accept=".jsonl,.json"
-                               required>
-                        <label for="jsonl_file" class="file-input-label">
-                            <i class="fas fa-folder-open fa-2x mb-2"></i>
-                            <div class="file-text">
-                                <strong>Choose JSONL File</strong>
-                                <span class="text-muted d-block">Click to browse or drag & drop</span>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="file-info mt-2" id="file-info" style="display: none;">
-                        <i class="fas fa-file-alt"></i>
-                        <span id="file-name"></span>
-                        <span class="text-muted" id="file-size"></span>
-                    </div>
+                <!-- File Upload Area -->
+                <div class="upload-area">
+                    <input type="file" 
+                           class="file-input" 
+                           id="jsonl_file" 
+                           name="jsonl_file" 
+                           accept=".jsonl,.json"
+                           required>
+                    <label for="jsonl_file" class="upload-label">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="upload-text">
+                            <h3>Choose a JSONL file</h3>
+                            <p>Drag and drop your file here, or click to browse</p>
+                            <span class="file-types">Supports .jsonl and .json files</span>
+                        </div>
+                    </label>
                 </div>
 
-                <!-- Clear Existing Option -->
-                <div class="option-card mb-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="clear_existing" name="clear_existing">
-                        <label class="form-check-label" for="clear_existing">
-                            <strong>Replace existing data</strong>
-                            <span class="text-muted d-block">Clear all current annotations before import</span>
+                <!-- File Info Display -->
+                <div class="file-info" id="file-info" style="display: none;">
+                    <div class="file-details">
+                        <i class="fas fa-file-alt"></i>
+                        <div class="file-text">
+                            <span class="file-name" id="file-name"></span>
+                            <span class="file-size" id="file-size"></span>
+                        </div>
+                    </div>
+                    <button type="button" class="remove-file" onclick="removeFile()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Import Options -->
+                <div class="import-options">
+                    <div class="option-item">
+                        <label class="option-label">
+                            <input type="checkbox" id="clear_existing" name="clear_existing" class="option-checkbox">
+                            <span class="checkmark"></span>
+                            <div class="option-content">
+                                <h4>Replace existing data</h4>
+                                <p>Clear all current annotations before importing new data</p>
+                            </div>
                         </label>
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
                 <div class="action-buttons">
-                    <a href="{% url 'annotation_list' %}" class="btn btn-outline-secondary btn-lg">
-                        <i class="fas fa-arrow-left me-2"></i> Cancel
+                    <a href="{% url 'annotation_list' %}" class="btn-secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Cancel</span>
                     </a>
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="fas fa-upload me-2"></i> Import Data
+                    <button type="submit" class="btn-primary" id="import-btn" disabled>
+                        <i class="fas fa-upload"></i>
+                        <span>Import Data</span>
                     </button>
                 </div>
             </form>
+        </div>
 
-            <!-- Upload Drug List -->
-            <div class="card mt-4">
-                <div class="card-header bg-primary text-white">
-                    <h5><i class="fas fa-pills"></i> Upload Drug List</h5>
+        <!-- Additional Upload Sections -->
+        <div class="additional-uploads">
+            <!-- Drug List Upload -->
+            <div class="upload-card">
+                <div class="card-header">
+                    <div class="card-icon drug-icon">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                    <div class="card-title">
+                        <h3>Drug List</h3>
+                        <p>Upload a list of drug names for auto-suggestions</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data" action="{% url 'upload_drug_list' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="drug_file" class="form-label">Drug List File (one drug per line, plain text)</label>
-                            <input type="file" class="form-control" id="drug_file" name="drug_file" accept=".txt">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Upload Drug List</button>
-                    </form>
-                </div>
+                <form method="post" enctype="multipart/form-data" action="{% url 'upload_drug_list' %}" class="card-form">
+                    {% csrf_token %}
+                    <div class="file-input-group">
+                        <input type="file" class="form-file-input" id="drug_file" name="drug_file" accept=".txt">
+                        <label for="drug_file" class="form-file-label">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Choose .txt file</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-upload">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload Drug List</span>
+                    </button>
+                </form>
             </div>
 
-            <!-- Upload ADE List -->
-            <div class="card mt-4">
-                <div class="card-header bg-danger text-white">
-                    <h5><i class="fas fa-exclamation-triangle"></i> Upload ADE List</h5>
+            <!-- ADE List Upload -->
+            <div class="upload-card">
+                <div class="card-header">
+                    <div class="card-icon ade-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="card-title">
+                        <h3>Adverse Event List</h3>
+                        <p>Upload a list of adverse events for auto-suggestions</p>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data" action="{% url 'upload_ade_list' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="ade_file" class="form-label">ADE List File (one ADE per line, plain text)</label>
-                            <input type="file" class="form-control" id="ade_file" name="ade_file" accept=".txt">
-                        </div>
-                        <button type="submit" class="btn btn-danger">Upload ADE List</button>
-                    </form>
-                </div>
+                <form method="post" enctype="multipart/form-data" action="{% url 'upload_ade_list' %}" class="card-form">
+                    {% csrf_token %}
+                    <div class="file-input-group">
+                        <input type="file" class="form-file-input" id="ade_file" name="ade_file" accept=".txt">
+                        <label for="ade_file" class="form-file-label">
+                            <i class="fas fa-file-upload"></i>
+                            <span>Choose .txt file</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-upload">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload ADE List</span>
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-.import-container {
+/* Import Page Layout */
+.import-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header Section */
+.import-header {
+    background: linear-gradient(135deg, var(--primary-800) 0%, var(--primary-900) 100%);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    margin-bottom: 2rem;
+    color: white;
+    text-align: center;
+    box-shadow: var(--shadow-2xl);
+}
+
+.header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.header-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.header-text h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.025em;
+}
+
+.header-text p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+}
+
+/* Status Card */
+.status-card {
     background: white;
     border-radius: 16px;
-    padding: 40px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    border: 1px solid #e3e6f0;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
 }
 
-.status-card {
-    background: #f8f9fa;
+.status-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
     border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
 }
 
-.file-upload-area {
+.status-info h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+}
+
+.status-info p {
+    color: var(--gray-600);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Import Section */
+.import-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.section-header p {
+    color: var(--gray-600);
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* Upload Area */
+.upload-area {
     position: relative;
+    margin-bottom: 1.5rem;
 }
 
 .file-input {
@@ -136,92 +292,395 @@
     pointer-events: none;
 }
 
-.file-input-label {
+.upload-label {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 200px;
-    border: 2px dashed #007bff;
-    border-radius: 12px;
-    background: #f8f9ff;
+    border: 3px dashed var(--gray-300);
+    border-radius: 16px;
+    background: var(--gray-50);
     cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 30px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 2rem;
     text-align: center;
 }
 
-.file-input-label:hover {
-    border-color: #0056b3;
-    background: #e6f0ff;
+.upload-label:hover {
+    border-color: var(--accent-blue);
+    background: var(--primary-50);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+    box-shadow: var(--shadow-lg);
 }
 
-.file-input-label i {
-    color: #007bff;
+.upload-label.file-selected {
+    border-color: var(--success-500);
+    background: var(--success-50);
+}
+
+.upload-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-dark) 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 1rem;
     transition: all 0.3s ease;
 }
 
-.file-input-label:hover i {
-    color: #0056b3;
+.upload-label:hover .upload-icon {
     transform: scale(1.1);
 }
 
-.file-text strong {
-    font-size: 1.2rem;
-    color: #007bff;
+.upload-text h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.5rem 0;
 }
 
+.upload-text p {
+    color: var(--gray-600);
+    margin: 0 0 0.5rem 0;
+}
+
+.file-types {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+}
+
+/* File Info */
 .file-info {
-    background: #e6f7ff;
-    border: 1px solid #91d5ff;
-    border-radius: 8px;
-    padding: 12px 16px;
+    background: var(--success-50);
+    border: 1px solid var(--success-200);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
 }
 
-.file-info i {
-    color: #1890ff;
+.file-details {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
-.option-card {
-    background: #f8f9fa;
+.file-details i {
+    color: var(--success-600);
+    font-size: 1.25rem;
+}
+
+.file-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-name {
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.file-size {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.remove-file {
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.remove-file:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+/* Import Options */
+.import-options {
+    margin-bottom: 2rem;
+}
+
+.option-item {
+    margin-bottom: 1rem;
+}
+
+.option-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    cursor: pointer;
+    padding: 1rem;
     border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
 }
 
-.form-check-input:checked {
-    background-color: #28a745;
-    border-color: #28a745;
+.option-label:hover {
+    background: var(--gray-50);
 }
 
+.option-checkbox {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--gray-300);
+    border-radius: 4px;
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.option-checkbox:checked + .checkmark {
+    background: var(--success-500);
+    border-color: var(--success-500);
+}
+
+.option-checkbox:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.option-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+}
+
+.option-content p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+/* Action Buttons */
 .action-buttons {
     display: flex;
-    gap: 16px;
+    gap: 1rem;
     justify-content: center;
 }
 
-.action-buttons .btn {
+.btn-primary, .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
     min-width: 140px;
-    padding: 12px 24px;
-    font-weight: 500;
-    border-radius: 8px;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--success-600) 0%, var(--success-700) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-primary:disabled {
+    background: var(--gray-300);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-200);
+}
+
+.btn-secondary:hover {
+    background: var(--gray-200);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Additional Uploads */
+.additional-uploads {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.upload-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
     transition: all 0.3s ease;
 }
 
-.btn-success:hover {
-    background-color: #218838;
+.upload-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+    box-shadow: var(--shadow-lg);
 }
 
-.btn-outline-secondary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(108,117,125,0.2);
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.drug-icon {
+    background: linear-gradient(135deg, var(--medical-blue) 0%, var(--medical-blue-dark) 100%);
+}
+
+.ade-icon {
+    background: linear-gradient(135deg, var(--medical-red) 0%, var(--medical-red-dark) 100%);
+}
+
+.card-title h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+}
+
+.card-title p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+.card-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.file-input-group {
+    position: relative;
+}
+
+.form-file-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.form-file-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 2px dashed var(--gray-300);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--gray-600);
+}
+
+.form-file-label:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+.btn-upload {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload-card:nth-child(1) .btn-upload {
+    background: linear-gradient(135deg, var(--medical-blue) 0%, var(--medical-blue-dark) 100%);
+    color: white;
+}
+
+.upload-card:nth-child(1) .btn-upload:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.upload-card:nth-child(2) .btn-upload {
+    background: linear-gradient(135deg, var(--medical-red) 0%, var(--medical-red-dark) 100%);
+    color: white;
+}
+
+.upload-card:nth-child(2) .btn-upload:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .import-page {
+        padding: 1rem;
+    }
+    
+    .import-header {
+        padding: 2rem 1rem;
+    }
+    
+    .header-text h1 {
+        font-size: 2rem;
+    }
+    
+    .additional-uploads {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+    }
 }
 </style>
 
@@ -231,7 +690,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileInfo = document.getElementById('file-info');
     const fileName = document.getElementById('file-name');
     const fileSize = document.getElementById('file-size');
-    const fileLabel = document.querySelector('.file-input-label');
+    const uploadLabel = document.querySelector('.upload-label');
+    const importBtn = document.getElementById('import-btn');
 
     fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -239,13 +699,13 @@ document.addEventListener('DOMContentLoaded', function() {
             fileName.textContent = file.name;
             fileSize.textContent = formatFileSize(file.size);
             fileInfo.style.display = 'flex';
+            uploadLabel.classList.add('file-selected');
+            importBtn.disabled = false;
             
-            // Update label appearance
-            fileLabel.style.borderColor = '#28a745';
-            fileLabel.style.background = '#e6ffed';
-            fileLabel.querySelector('i').style.color = '#28a745';
-            fileLabel.querySelector('strong').textContent = 'File Selected';
-            fileLabel.querySelector('.text-muted').textContent = 'Ready to import';
+            // Update upload label
+            uploadLabel.querySelector('h3').textContent = 'File Selected';
+            uploadLabel.querySelector('p').textContent = 'Ready to import';
+            uploadLabel.querySelector('.upload-icon').innerHTML = '<i class="fas fa-check"></i>';
         }
     });
 
@@ -257,5 +717,22 @@ document.addEventListener('DOMContentLoaded', function() {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 });
+
+function removeFile() {
+    const fileInput = document.getElementById('jsonl_file');
+    const fileInfo = document.getElementById('file-info');
+    const uploadLabel = document.querySelector('.upload-label');
+    const importBtn = document.getElementById('import-btn');
+    
+    fileInput.value = '';
+    fileInfo.style.display = 'none';
+    uploadLabel.classList.remove('file-selected');
+    importBtn.disabled = true;
+    
+    // Reset upload label
+    uploadLabel.querySelector('h3').textContent = 'Choose a JSONL file';
+    uploadLabel.querySelector('p').textContent = 'Drag and drop your file here, or click to browse';
+    uploadLabel.querySelector('.upload-icon').innerHTML = '<i class="fas fa-cloud-upload-alt"></i>';
+}
 </script>
 {% endblock %} 

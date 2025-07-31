@@ -8,14 +8,14 @@
 <style>
 /* Visual indicators for changes */
 .removed-entity {
-    background: #f8d7da !important;
-    color: #721c24 !important;
+    background: var(--danger-100) !important;
+    color: var(--danger-700) !important;
     padding: 2px 4px;
     border-radius: 3px;
     font-weight: 500;
-    border: 1px solid #f5c6cb;
+    border: 1px solid var(--danger-200);
     text-decoration: line-through;
-    text-decoration-color: #000;
+    text-decoration-color: var(--danger-600);
     text-decoration-thickness: 1px;
     text-decoration-style: solid;
     margin: 0 1px;
@@ -29,61 +29,61 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: #721c24;
+    background: var(--danger-600);
     transform: translateY(-50%);
     z-index: 1;
 }
 .removed-drug {
-    background: #d4edda !important;
-    color: #155724 !important;
+    background: var(--success-100) !important;
+    color: var(--success-700) !important;
     padding: 2px 4px !important;
     border-radius: 3px !important;
     font-weight: 700 !important;
-    border: 2px solid #c3e6cb !important;
+    border: 2px solid var(--success-200) !important;
     margin: 0 1px !important;
     position: relative !important;
     font-size: 1em !important;
     display: inline !important;
     text-decoration: line-through !important;
-    text-decoration-color: #000 !important;
+    text-decoration-color: var(--success-600) !important;
     text-decoration-thickness: 1px !important;
     text-decoration-style: solid !important;
 }
 .removed-ade {
-    background: #f8d7da !important;
-    color: #721c24 !important;
+    background: var(--danger-100) !important;
+    color: var(--danger-700) !important;
     padding: 2px 4px !important;
     border-radius: 3px !important;
     font-weight: 700 !important;
-    border: 2px solid #f5c6cb !important;
+    border: 2px solid var(--danger-200) !important;
     margin: 0 1px !important;
     position: relative !important;
     font-size: 1em !important;
     display: inline !important;
     text-decoration: line-through !important;
-    text-decoration-color: #000 !important;
+    text-decoration-color: var(--danger-600) !important;
     text-decoration-thickness: 1px !important;
     text-decoration-style: solid !important;
 }
 .added-drug {
-    background: #28a745 !important; /* vibrant green */
+    background: var(--medical-blue) !important;
     color: #fff !important;
     padding: 2px 4px !important;
     border-radius: 3px !important;
     font-weight: 700 !important;
-    border: 2px solid #1e7e34 !important; /* darker green border */
+    border: 2px solid var(--medical-blue-dark) !important;
     margin: 0 1px !important;
     position: relative !important;
     font-size: 1em !important;
     display: inline !important;
 }
 .added-ade {
-    background: #dc3545 !important; /* vibrant red */
+    background: var(--medical-red) !important;
     color: #fff !important;
     padding: 2px 4px !important;
     border-radius: 3px !important;
     font-weight: 700 !important;
-    border: 2px solid #a71d2a !important; /* darker red border */
+    border: 2px solid var(--medical-red-dark) !important;
     margin: 0 1px !important;
     position: relative !important;
     font-size: 1em !important;
@@ -93,16 +93,16 @@
 /* Super-specific highlight for added drugs */
 div.clinical-text-display .added-drug,
 div.clinical-text-preview .added-drug {
-    background: #28a745 !important;
+    background: var(--medical-blue) !important;
     color: #fff !important;
-    border: 2px solid #1e7e34 !important;
+    border: 2px solid var(--medical-blue-dark) !important;
 }
 /* Super-specific highlight for added ADEs */
 div.clinical-text-display .added-ade,
 div.clinical-text-preview .added-ade {
-    background: #dc3545 !important;
+    background: var(--medical-red) !important;
     color: #fff !important;
-    border: 2px solid #a71d2a !important;
+    border: 2px solid var(--medical-red-dark) !important;
 }
 
 /* Enhanced styling for grouped changes */

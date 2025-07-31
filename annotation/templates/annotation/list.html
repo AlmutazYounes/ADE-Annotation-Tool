@@ -5,18 +5,19 @@
 {% endblock %}
 
 {% block content %}
+<div class="container-fluid px-4 py-3">
 {% if no_annotations %}
     <!-- Modern Empty State -->
     <div class="row justify-content-center">
         <div class="col-lg-6">
-            <div class="modern-card text-center py-5">
+            <div class="card text-center py-5">
                 <div class="p-4">
                     <div class="mb-4">
                         <i class="fas fa-file-medical fa-4x text-muted opacity-50"></i>
                     </div>
                     <h3 class="fw-bold text-gray-800 mb-3">No Annotations Available</h3>
                     <p class="text-muted mb-4 fs-5">Start by importing your medical text data to begin the annotation process.</p>
-                    <a href="{% url 'import_jsonl' %}" class="btn btn-modern btn-primary btn-lg">
+                    <a href="{% url 'import_jsonl' %}" class="btn btn-primary btn-lg">
                         <i class="fas fa-cloud-upload-alt"></i>
                         Import Medical Data
                     </a>
@@ -60,11 +61,11 @@
             <div class="col-md-4">
                 <div class="d-flex gap-2 align-items-center">
                     {% if prev_annotation %}
-                        <a href="{% url 'annotation_single' prev_annotation.id %}" class="btn btn-modern btn-outline-secondary btn-sm">
+                        <a href="{% url 'annotation_single' prev_annotation.id %}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     {% else %}
-                        <button class="btn btn-modern btn-outline-secondary btn-sm" disabled>
+                        <button class="btn btn-outline-primary btn-sm" disabled>
                             <i class="fas fa-chevron-left"></i>
                         </button>
                     {% endif %}
@@ -87,11 +88,11 @@
                            onkeydown="if(event.key==='Enter'){jumpToNoteInput();}">
                     
                     {% if next_annotation %}
-                        <a href="{% url 'annotation_single' next_annotation.id %}" class="btn btn-modern btn-outline-secondary btn-sm">
+                        <a href="{% url 'annotation_single' next_annotation.id %}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-chevron-right"></i>
                         </a>
                     {% else %}
-                        <button class="btn btn-modern btn-outline-secondary btn-sm" disabled>
+                        <button class="btn btn-outline-primary btn-sm" disabled>
                             <i class="fas fa-chevron-right"></i>
                         </button>
                     {% endif %}
@@ -121,8 +122,7 @@
 
     <!-- Intelligent Suggestions Bar - Fixed Height to Prevent Layout Shifts -->
     <div class="suggestions-container mb-2">
-        <div id="quick-suggestions" class="alert-modern alert-info suggestions-fixed-height" 
-             style="{% if not quick_drug_suggestions and not quick_ade_suggestions %}opacity: 0; pointer-events: none;{% endif %}">
+        <div id="quick-suggestions" class="alert-modern alert-info suggestions-fixed-height">
             <div class="d-flex align-items-center gap-3">
                 <div class="flex-shrink-0">
                     <i class="fas fa-lightbulb"></i>
@@ -142,7 +142,7 @@
                                 </button>
                             {% endfor %}
                         {% else %}
-                            <span class="text-muted small">No intelligent suggestions available for this text.</span>
+                            <span class="text-muted small">None</span>
                         {% endif %}
                     </div>
                 </div>
@@ -154,7 +154,7 @@
     <div class="row g-3">
         <!-- Text Display - Fixed Height, Scrollable -->
         <div class="col-lg-8">
-            <div class="modern-card">
+            <div class="card">
                 <div class="card-header bg-light border-bottom px-3 py-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <h6 class="fw-semibold mb-0">
@@ -162,8 +162,8 @@
                             Clinical Text
                         </h6>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleTextSize()">
-                                <i class="fas fa-search-plus" id="text-size-icon"></i>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="copyText()" title="Copy text to clipboard">
+                                <i class="fas fa-copy" id="copy-icon"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-secondary" onclick="toggleFullscreen()">
                                 <i class="fas fa-expand" id="fullscreen-icon"></i>
@@ -321,6 +321,8 @@
         </div>
     </div>
 </div>
+{% endif %}
+</div>
 
 <style>
 /* Compact Top Section Styles */
@@ -391,19 +393,30 @@
 
 /* Fixed Height Suggestions - Prevents Layout Shifts */
 .suggestions-container {
-    min-height: 60px;
+    height: 80px;
+    margin-bottom: var(--space-md);
 }
 
 .suggestions-fixed-height {
-    min-height: 50px;
+    height: 70px;
     padding: var(--space-sm) var(--space-md);
     transition: opacity 0.3s ease;
     display: flex;
     align-items: center;
+    overflow: hidden;
 }
 
 .suggestions-fixed-height .fas.fa-lightbulb {
     font-size: 1rem;
+}
+
+.suggestions-fixed-height #suggestion-list {
+    max-height: 50px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-xs);
 }
 
 /* Compact Layout Styles */
@@ -474,25 +487,25 @@
 }
 
 .entity-tag-compact.drug-tag {
-    background: linear-gradient(135deg, var(--success-100) 0%, var(--success-50) 100%);
-    color: var(--success-700);
-    border-color: var(--success-200);
+    background: linear-gradient(135deg, var(--medical-blue-light) 0%, var(--medical-blue) 100%);
+    color: white;
+    border-color: var(--medical-blue);
 }
 
 .entity-tag-compact.drug-tag:hover {
-    background: linear-gradient(135deg, var(--success-200) 0%, var(--success-100) 100%);
-    color: var(--success-800);
+    background: linear-gradient(135deg, var(--medical-blue) 0%, var(--medical-blue-dark) 100%);
+    color: white;
 }
 
 .entity-tag-compact.adverse-event-tag {
-    background: linear-gradient(135deg, var(--danger-100) 0%, var(--danger-50) 100%);
-    color: var(--danger-700);
-    border-color: var(--danger-200);
+    background: linear-gradient(135deg, var(--medical-red-light) 0%, var(--medical-red) 100%);
+    color: white;
+    border-color: var(--medical-red);
 }
 
 .entity-tag-compact.adverse-event-tag:hover {
-    background: linear-gradient(135deg, var(--danger-200) 0%, var(--danger-100) 100%);
-    color: var(--danger-800);
+    background: linear-gradient(135deg, var(--medical-red) 0%, var(--medical-red-dark) 100%);
+    color: white;
 }
 
 .empty-state-compact {
@@ -510,11 +523,7 @@
     border-bottom: 1px solid var(--gray-200) !important;
 }
 
-/* Text size toggle */
-.text-size-large .text-display {
-    font-size: 1.375rem;
-    line-height: 1.9;
-}
+
 
 /* Fullscreen mode */
 .fullscreen-mode .text-display-container {
@@ -542,8 +551,7 @@
     }
     
     .annotation-sidebar-compact {
-        height: auto;
-        max-height: 55vh;
+        height: 55vh;
         margin-top: var(--space-md);
     }
     
@@ -582,11 +590,11 @@
     }
     
     .suggestions-container {
-        min-height: 80px;
+        height: 80px;
     }
     
     .suggestions-fixed-height {
-        min-height: 70px;
+        height: 70px;
     }
 }
 </style>
@@ -599,7 +607,6 @@ let currentDrugs = {{ annotation.drugs|default:"[]"|safe }};
 let currentEvents = {{ annotation.adverse_events|default:"[]"|safe }};
 let selectedText = '';
 let selectedEntity = '';
-let isTextLarge = false;
 let isFullscreen = false;
 
 // Initialize on page load
@@ -609,19 +616,65 @@ document.addEventListener('DOMContentLoaded', function() {
     setupGoogleSearchSelection();
 });
 
-// Text size toggle
-function toggleTextSize() {
-    isTextLarge = !isTextLarge;
-    const container = document.getElementById('text-container');
-    const icon = document.getElementById('text-size-icon');
+// Copy text to clipboard
+function copyText() {
+    const textDisplay = document.getElementById('text-display');
+    const copyIcon = document.getElementById('copy-icon');
     
-    if (isTextLarge) {
-        container.classList.add('text-size-large');
-        icon.className = 'fas fa-search-minus';
-    } else {
-        container.classList.remove('text-size-large');
-        icon.className = 'fas fa-search-plus';
+    if (textDisplay) {
+        const text = textDisplay.textContent || textDisplay.innerText;
+        
+        // Use the modern clipboard API
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show success feedback
+                copyIcon.className = 'fas fa-check';
+                copyIcon.style.color = '#28a745';
+                
+                setTimeout(() => {
+                    copyIcon.className = 'fas fa-copy';
+                    copyIcon.style.color = '';
+                }, 1500);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                fallbackCopyTextToClipboard(text, copyIcon);
+            });
+        } else {
+            // Fallback for older browsers
+            fallbackCopyTextToClipboard(text, copyIcon);
+        }
     }
+}
+
+// Fallback copy function for older browsers
+function fallbackCopyTextToClipboard(text, copyIcon) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            // Show success feedback
+            copyIcon.className = 'fas fa-check';
+            copyIcon.style.color = '#28a745';
+            
+            setTimeout(() => {
+                copyIcon.className = 'fas fa-copy';
+                copyIcon.style.color = '';
+            }, 1500);
+        }
+    } catch (err) {
+        console.error('Fallback copy failed: ', err);
+        alert('Failed to copy text to clipboard');
+    }
+    
+    document.body.removeChild(textArea);
 }
 
 // Fullscreen toggle

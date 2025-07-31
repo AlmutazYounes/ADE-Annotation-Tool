@@ -8,9 +8,13 @@ urlpatterns = [
     path('import/', views.import_jsonl, name='import_jsonl'),
     path('export/', views.export_jsonl, name='export_jsonl'),
     path('export-entities/', views.export_entities_jsonl, name='export_entities_jsonl'),
+    path('export-changes/', views.export_change_statistics, name='export_change_statistics'),
+    path('upload-hf/', views.upload_to_huggingface, name='upload_to_huggingface'),
     path('stats/', views.annotation_stats, name='annotation_stats'),
+    path('entity-examples/', views.entity_examples, name='entity_examples'),
+    path('entity-examples-page/', views.entity_examples_page, name='entity_examples_page'),
     path('changes/', views.annotation_changes, name='annotation_changes'),
     path('changes/<int:annotation_id>/', views.annotation_changes, name='annotation_changes_specific'),
     path('upload-drugs/', views.upload_drug_list, name='upload_drug_list'),
     path('upload-ades/', views.upload_ade_list, name='upload_ade_list'),
-] 
+]
