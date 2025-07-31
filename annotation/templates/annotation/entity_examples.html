@@ -47,63 +47,17 @@
     font-weight: 700;
     margin: 0;
     letter-spacing: -0.025em;
+    color: white;
 }
 
 .entity-info p {
     font-size: 1.1rem;
     opacity: 0.9;
     margin: 0.5rem 0 0 0;
+    color: white;
 }
 
-/* Breadcrumb Navigation */
-.breadcrumb-nav {
-    background: white;
-    border-radius: 12px;
-    padding: 1rem 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-sm);
-}
 
-.breadcrumb {
-    margin: 0;
-    background: none;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.breadcrumb-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.breadcrumb-item a {
-    color: var(--accent-blue);
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.breadcrumb-item a:hover {
-    color: var(--accent-blue-dark);
-    text-decoration: none;
-}
-
-.breadcrumb-item.active {
-    color: var(--gray-600);
-    font-weight: 600;
-}
-
-.breadcrumb-separator {
-    color: var(--gray-400);
-    margin: 0 0.25rem;
-}
 
 /* Statistics Cards */
 .stats-section {
@@ -139,12 +93,12 @@
 .stat-info h3 {
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--gray-900);
+    color: var(--primary-700);
     margin: 0 0 0.5rem 0;
 }
 
 .stat-info p {
-    color: var(--gray-600);
+    color: var(--primary-600);
     margin: 0;
     font-size: 0.95rem;
     font-weight: 500;
@@ -191,7 +145,7 @@
 .search-header h2 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--gray-900);
+    color: var(--primary-700);
     margin: 0 0 0.5rem 0;
     display: flex;
     align-items: center;
@@ -333,7 +287,7 @@
 .example-text {
     font-size: 1.1rem;
     line-height: 1.7;
-    color: var(--gray-800);
+    color: var(--primary-700);
     margin-bottom: 1.5rem;
     padding-left: 1rem;
 }
@@ -485,12 +439,12 @@
 .no-examples h3 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--gray-900);
+    color: var(--primary-700);
     margin: 0 0 1rem 0;
 }
 
 .no-examples p {
-    color: var(--gray-600);
+    color: var(--primary-600);
     margin: 0 0 1.5rem 0;
     font-size: 1rem;
 }
@@ -576,33 +530,7 @@
 
 {% block content %}
 <div class="entity-examples-page">
-    <!-- Breadcrumb Navigation -->
-    <nav class="breadcrumb-nav">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{% url 'annotation_list' %}">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-            </li>
-            <li class="breadcrumb-separator">
-                <i class="fas fa-chevron-right"></i>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{% url 'annotation_stats' %}">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Analytics</span>
-                </a>
-            </li>
-            <li class="breadcrumb-separator">
-                <i class="fas fa-chevron-right"></i>
-            </li>
-            <li class="breadcrumb-item active">
-                <i class="fas fa-microscope"></i>
-                <span>{{ breadcrumb_name }}</span>
-            </li>
-        </ol>
-    </nav>
+
 
     <!-- Header Section -->
     <div class="examples-header">

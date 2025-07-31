@@ -44,7 +44,7 @@
             
             <div class="col-md-3">
                 <div class="text-center">
-                    <h6 class="fw-bold text-gray-800 mb-0">
+                    <h6 class="fw-bold text-primary mb-0">
                         <i class="fas fa-file-medical text-primary"></i>
                         Annotation #{{ annotation.id }}
                     </h6>
@@ -154,8 +154,8 @@
     <div class="row g-3">
         <!-- Text Display - Fixed Height, Scrollable -->
         <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header bg-light border-bottom px-3 py-2">
+            <div class="card clinical-text-card">
+                <div class="card-header border-bottom px-3 py-2">
                     <div class="d-flex align-items-center justify-content-between">
                         <h6 class="fw-semibold mb-0">
                             <i class="fas fa-file-alt text-primary"></i>
@@ -289,16 +289,16 @@
             Add "<span id="selected-text" class="text-primary"></span>" as:
         </div>
         <div class="popup-buttons">
-            <button class="btn btn-modern btn-success btn-sm" onclick="addSelectedEntity('drugs')">
+            <button class="btn btn-success btn-sm" onclick="addSelectedEntity('drugs')">
                 <i class="fas fa-pills"></i> Drug
             </button>
-            <button class="btn btn-modern btn-danger btn-sm" onclick="addSelectedEntity('adverse_events')">
+            <button class="btn btn-danger btn-sm" onclick="addSelectedEntity('adverse_events')">
                 <i class="fas fa-exclamation-triangle"></i> Adverse Event
             </button>
-            <button class="btn btn-modern btn-outline-secondary btn-sm" onclick="searchGoogleSelectedText()">
+            <button class="btn btn-outline-secondary btn-sm" onclick="searchGoogleSelectedText()">
                 <i class="fab fa-google"></i> Search
             </button>
-            <button class="btn btn-modern btn-outline-secondary btn-sm" onclick="hideSelectionPopup()">
+            <button class="btn btn-outline-secondary btn-sm" onclick="hideSelectionPopup()">
                 <i class="fas fa-times"></i> Cancel
             </button>
         </div>
@@ -321,7 +321,6 @@
         </div>
     </div>
 </div>
-{% endif %}
 </div>
 
 <style>
@@ -391,6 +390,81 @@
     box-shadow: var(--shadow-lg);
 }
 
+/* Selection Popup Styles */
+.selection-popup {
+    position: fixed;
+    z-index: 9999;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--gray-200);
+    min-width: 280px;
+    max-width: 400px;
+    backdrop-filter: blur(10px);
+}
+
+.popup-content {
+    padding: 1.5rem;
+}
+
+.popup-content .fw-semibold {
+    font-weight: 600;
+    color: var(--primary-700);
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
+.popup-content .text-primary {
+    color: var(--primary-600);
+    font-weight: 700;
+}
+
+.popup-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.popup-buttons .btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: none;
+}
+
+.popup-buttons .btn-success {
+    background: linear-gradient(135deg, var(--medical-drug), var(--medical-drug-dark));
+    color: white;
+}
+
+.popup-buttons .btn-danger {
+    background: linear-gradient(135deg, var(--medical-ade), var(--medical-ade-dark));
+    color: white;
+}
+
+.popup-buttons .btn-outline-secondary {
+    background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+    color: var(--gray-700);
+    border: 1px solid var(--gray-300);
+}
+
+.popup-buttons .btn-modern {
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+    color: white;
+    border: none;
+}
+
 /* Fixed Height Suggestions - Prevents Layout Shifts */
 .suggestions-container {
     height: 80px;
@@ -424,6 +498,9 @@
     height: 70vh;
     overflow-y: auto;
     border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    background: white;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-sm);
 }
 
 .text-display {
@@ -433,6 +510,13 @@
     border-radius: 0;
     box-shadow: none;
     border: none;
+    padding: var(--space-lg);
+    line-height: 1.8;
+    font-size: 1rem;
+    color: var(--gray-800);
+    text-align: justify;
+    word-wrap: break-word;
+    hyphens: auto;
 }
 
 .annotation-sidebar-compact {
@@ -476,37 +560,49 @@
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: none;
     border: 1px solid;
     text-decoration: none;
 }
 
-.entity-tag-compact:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
 .entity-tag-compact.drug-tag {
-    background: linear-gradient(135deg, var(--medical-blue-light) 0%, var(--medical-blue) 100%);
+    background: linear-gradient(135deg, var(--medical-drug-light) 0%, var(--medical-drug) 100%);
     color: white;
-    border-color: var(--medical-blue);
-}
-
-.entity-tag-compact.drug-tag:hover {
-    background: linear-gradient(135deg, var(--medical-blue) 0%, var(--medical-blue-dark) 100%);
-    color: white;
+    border-color: var(--medical-drug);
 }
 
 .entity-tag-compact.adverse-event-tag {
-    background: linear-gradient(135deg, var(--medical-red-light) 0%, var(--medical-red) 100%);
+    background: linear-gradient(135deg, var(--medical-ade-light) 0%, var(--medical-ade) 100%);
     color: white;
-    border-color: var(--medical-red);
+    border-color: var(--medical-ade);
 }
 
-.entity-tag-compact.adverse-event-tag:hover {
-    background: linear-gradient(135deg, var(--medical-red) 0%, var(--medical-red-dark) 100%);
+/* Text Highlighting Styles */
+.highlight-drug {
+    background: linear-gradient(135deg, var(--medical-drug-light) 0%, var(--medical-drug) 100%);
     color: white;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: none !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
+/* Removed hover effect for highlight-drug */
+
+.highlight-adverse-event {
+    background: linear-gradient(135deg, var(--medical-ade-light) 0%, var(--medical-ade) 100%);
+    color: white;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: none !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Removed hover effect for highlight-adverse-event */
 
 .empty-state-compact {
     display: flex;
@@ -524,6 +620,17 @@
 }
 
 
+
+/* Remove hover effect from clinical text card */
+.clinical-text-card {
+    transition: none !important;
+}
+
+.clinical-text-card:hover {
+    box-shadow: var(--shadow-sm) !important;
+    transform: none !important;
+    border-color: var(--gray-200) !important;
+}
 
 /* Fullscreen mode */
 .fullscreen-mode .text-display-container {
@@ -548,6 +655,11 @@
 @media (max-width: 991px) {
     .text-display-container {
         height: 55vh;
+    }
+    
+    .text-display {
+        padding: var(--space-md);
+        font-size: 0.95rem;
     }
     
     .annotation-sidebar-compact {
@@ -608,6 +720,7 @@ let currentEvents = {{ annotation.adverse_events|default:"[]"|safe }};
 let selectedText = '';
 let selectedEntity = '';
 let isFullscreen = false;
+let selectedTextPosition = null; // Store position of selected text
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -744,8 +857,9 @@ function setupTextSelection() {
                     return;
                 }
                 
-                // For regular text selection
+                // For regular text selection - capture position
                 selectedText = selected;
+                selectedTextPosition = getTextPosition(range, textDisplay);
                 showSelectionPopup(e.pageX, e.pageY);
                 selection.removeAllRanges();
             }
@@ -753,14 +867,89 @@ function setupTextSelection() {
     });
 }
 
+// Get the position of selected text in the original text
+function getTextPosition(range, textDisplay) {
+    const text = textDisplay.textContent || textDisplay.innerText;
+    const startContainer = range.startContainer;
+    const endContainer = range.endContainer;
+    
+    // Calculate start offset
+    let startOffset = range.startOffset;
+    if (startContainer.nodeType === Node.TEXT_NODE) {
+        // Walk through previous text nodes to get absolute position
+        let currentNode = startContainer;
+        while (currentNode.previousSibling) {
+            currentNode = currentNode.previousSibling;
+            if (currentNode.nodeType === Node.TEXT_NODE) {
+                startOffset += currentNode.textContent.length;
+            } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+                startOffset += currentNode.textContent.length;
+            }
+        }
+    }
+    
+    // Calculate end offset
+    let endOffset = range.endOffset;
+    if (endContainer.nodeType === Node.TEXT_NODE) {
+        // Walk through previous text nodes to get absolute position
+        let currentNode = endContainer;
+        while (currentNode.previousSibling) {
+            currentNode = currentNode.previousSibling;
+            if (currentNode.nodeType === Node.TEXT_NODE) {
+                endOffset += currentNode.textContent.length;
+            } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+                endOffset += currentNode.textContent.length;
+            }
+        }
+    }
+    
+    return { start: startOffset, end: endOffset, text: selectedText };
+}
+
 // Show selection popup
 function showSelectionPopup(x, y) {
+    // Hide entity popup if it's visible
+    hideEntityPopup();
+    
     const popup = document.getElementById('selection-popup');
     document.getElementById('selected-text').textContent = selectedText;
     
     popup.style.display = 'block';
-    popup.style.left = x + 'px';
-    popup.style.top = y + 'px';
+    
+    // Get popup dimensions
+    const popupRect = popup.getBoundingClientRect();
+    const popupWidth = popup.offsetWidth;
+    const popupHeight = popup.offsetHeight;
+    
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // Calculate initial position (centered horizontally, above the click)
+    let left = x - (popupWidth / 2);
+    let top = y - popupHeight - 15; // 15px margin above
+    
+    // Adjust horizontal position if popup would go off-screen
+    if (left < 10) {
+        left = 10; // Minimum 10px from left edge
+    } else if (left + popupWidth > viewportWidth - 10) {
+        left = viewportWidth - popupWidth - 10; // Minimum 10px from right edge
+    }
+    
+    // Adjust vertical position if popup would go off-screen
+    if (top < 10) {
+        // If popup would go above viewport, show it below the click instead
+        top = y + 15; // 15px margin below
+    }
+    
+    // Ensure popup doesn't go below viewport
+    if (top + popupHeight > viewportHeight - 10) {
+        top = viewportHeight - popupHeight - 10;
+    }
+    
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    popup.style.transform = 'none'; // Remove the default transform
 }
 
 // Hide selection popup
@@ -774,6 +963,9 @@ function showEntityPopup(entityText, entityType, event) {
     event.stopPropagation();
     selectedEntity = entityText;
     
+    // Hide selection popup if it's visible
+    hideSelectionPopup();
+    
     const popup = document.getElementById('entity-popup');
     const typeLabel = entityType === 'drug' ? 'Drug' : 'Adverse Event';
     
@@ -781,8 +973,40 @@ function showEntityPopup(entityText, entityType, event) {
     document.getElementById('entity-text').textContent = entityText;
     
     popup.style.display = 'block';
-    popup.style.left = event.pageX + 'px';
-    popup.style.top = event.pageY + 'px';
+    
+    // Get popup dimensions
+    const popupWidth = popup.offsetWidth;
+    const popupHeight = popup.offsetHeight;
+    
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    // Calculate initial position (centered horizontally, above the click)
+    let left = event.pageX - (popupWidth / 2);
+    let top = event.pageY - popupHeight - 15; // 15px margin above
+    
+    // Adjust horizontal position if popup would go off-screen
+    if (left < 10) {
+        left = 10; // Minimum 10px from left edge
+    } else if (left + popupWidth > viewportWidth - 10) {
+        left = viewportWidth - popupWidth - 10; // Minimum 10px from right edge
+    }
+    
+    // Adjust vertical position if popup would go off-screen
+    if (top < 10) {
+        // If popup would go above viewport, show it below the click instead
+        top = event.pageY + 15; // 15px margin below
+    }
+    
+    // Ensure popup doesn't go below viewport
+    if (top + popupHeight > viewportHeight - 10) {
+        top = viewportHeight - popupHeight - 10;
+    }
+    
+    popup.style.left = left + 'px';
+    popup.style.top = top + 'px';
+    popup.style.transform = 'none'; // Remove the default transform
 }
 
 // Hide entity popup
@@ -797,13 +1021,31 @@ function addSelectedEntity(type) {
     
     const currentList = type === 'drugs' ? currentDrugs : currentEvents;
     
-    if (currentList.includes(selectedText)) {
-        alert(`"${selectedText}" is already added.`);
+    // Check if this exact text at this position is already added
+    const existingEntity = currentList.find(entity => {
+        if (typeof entity === 'string') {
+            return entity === selectedText;
+        } else {
+            return entity.text === selectedText && 
+                   entity.position && 
+                   entity.position.start === selectedTextPosition.start &&
+                   entity.position.end === selectedTextPosition.end;
+        }
+    });
+    
+    if (existingEntity) {
+        alert(`"${selectedText}" is already added at this position.`);
         hideSelectionPopup();
         return;
     }
     
-    currentList.push(selectedText);
+    // Store entity with position information
+    const entityData = {
+        text: selectedText,
+        position: selectedTextPosition
+    };
+    
+    currentList.push(entityData);
     updateEntityDisplay(type);
     highlightEntities();
     hideSelectionPopup();
@@ -854,7 +1096,15 @@ function addEntity(type) {
 // Remove entity function
 function removeEntity(type, entityName) {
     const currentList = type === 'drugs' ? currentDrugs : currentEvents;
-    const index = currentList.indexOf(entityName);
+    
+    // Find the entity to remove (handle both string and object formats)
+    const index = currentList.findIndex(entity => {
+        if (typeof entity === 'string') {
+            return entity === entityName;
+        } else {
+            return entity.text === entityName;
+        }
+    });
     
     if (index > -1) {
         currentList.splice(index, 1);
@@ -883,7 +1133,10 @@ function updateEntityDisplay(type) {
             currentList.forEach(entity => {
                 const tag = document.createElement('span');
                 tag.className = `entity-tag-compact ${tagClass}`;
-                tag.innerHTML = `${entity} <i class="fas fa-times"></i>`;
+                
+                // Handle both string and object formats
+                const entityText = typeof entity === 'string' ? entity : entity.text;
+                tag.innerHTML = `${entityText} <i class="fas fa-times"></i>`;
                 tag.onclick = () => removeEntity(type, entity);
                 container.appendChild(tag);
             });
@@ -915,9 +1168,13 @@ function autoSave() {
 function saveAnnotation(silent = false, validated = false) {
     const annotationId = document.getElementById('text-display').getAttribute('data-annotation-id');
     
+    // Convert entities to simple text arrays for saving
+    const drugsText = currentDrugs.map(drug => typeof drug === 'string' ? drug : drug.text);
+    const eventsText = currentEvents.map(event => typeof event === 'string' ? event : event.text);
+    
     const formData = new FormData();
-    formData.append('drugs', currentDrugs.join(','));
-    formData.append('adverse_events', currentEvents.join(','));
+    formData.append('drugs', drugsText.join(','));
+    formData.append('adverse_events', eventsText.join(','));
     formData.append('is_validated', validated ? 'on' : '');
     formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
     
@@ -1049,7 +1306,7 @@ function jumpToNoteInput() {
     }
 }
 
-// Enhanced highlighting function with multi-word entity support
+// Enhanced highlighting function with position-based entity support
 function highlightEntities() {
     const textDisplay = document.getElementById('text-display');
     if (!textDisplay) return;
@@ -1057,40 +1314,87 @@ function highlightEntities() {
     let text = textDisplay.textContent || textDisplay.innerText;
     const allEntities = [];
     
+    // Process entities with position information
     currentDrugs.forEach(drug => {
-        allEntities.push({text: drug, type: 'drug'});
+        if (typeof drug === 'string') {
+            // Legacy support for string-only entities
+            allEntities.push({text: drug, type: 'drug', position: null});
+        } else {
+            // New format with position information
+            allEntities.push({text: drug.text, type: 'drug', position: drug.position});
+        }
     });
     
     currentEvents.forEach(event => {
-        allEntities.push({text: event, type: 'adverse-event'});
+        if (typeof event === 'string') {
+            // Legacy support for string-only entities
+            allEntities.push({text: event, type: 'adverse-event', position: null});
+        } else {
+            // New format with position information
+            allEntities.push({text: event.text, type: 'adverse-event', position: event.position});
+        }
     });
     
-    // Sort by length (longest first) to handle overlapping entities properly
-    allEntities.sort((a, b) => b.text.length - a.text.length);
+    // Sort by position (earliest first) for proper highlighting
+    allEntities.sort((a, b) => {
+        if (a.position && b.position) {
+            return a.position.start - b.position.start;
+        }
+        return 0;
+    });
     
     // Create a map to track which parts of text are already highlighted
     const highlightedRanges = new Map();
     
     allEntities.forEach(entity => {
-        const escapedText = entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${escapedText})`, 'gi');
-        
-        text = text.replace(regex, function(match, p1, offset, string) {
-            const beforeMatch = string.substring(0, offset);
-            const openTags = (beforeMatch.match(/<[^>]*$/g) || []).length;
-            const closeTags = (beforeMatch.match(/>[^<]*$/g) || []).length;
-            if (openTags > closeTags) return match;
+        if (entity.position) {
+            // Highlight specific position
+            const start = entity.position.start;
+            const end = entity.position.end;
+            const entityText = text.substring(start, end);
             
-            // Store the range for this entity
-            const endOffset = offset + match.length;
-            highlightedRanges.set(`${offset}-${endOffset}`, {
-                text: match,
-                type: entity.type,
-                fullEntity: entity.text
+            // Check if this range is already highlighted
+            const rangeKey = `${start}-${end}`;
+            if (highlightedRanges.has(rangeKey)) return;
+            
+            // Verify the text at this position matches the entity
+            if (entityText.toLowerCase() === entity.text.toLowerCase()) {
+                highlightedRanges.set(rangeKey, {
+                    text: entityText,
+                    type: entity.type,
+                    fullEntity: entity.text
+                });
+                
+                // Replace the specific text at this position
+                const beforeText = text.substring(0, start);
+                const afterText = text.substring(end);
+                text = beforeText + 
+                       `<span class="highlight-${entity.type}" data-entity="${entity.text}" data-start="${start}" data-end="${end}">${entityText}</span>` + 
+                       afterText;
+            }
+        } else {
+            // Legacy: highlight all instances (for backward compatibility)
+            const escapedText = entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedText})`, 'gi');
+            
+            text = text.replace(regex, function(match, p1, offset, string) {
+                const beforeMatch = string.substring(0, offset);
+                const openTags = (beforeMatch.match(/<[^>]*$/g) || []).length;
+                const closeTags = (beforeMatch.match(/>[^<]*$/g) || []).length;
+                if (openTags > closeTags) return match;
+                
+                const rangeKey = `${offset}-${offset + match.length}`;
+                if (highlightedRanges.has(rangeKey)) return match;
+                
+                highlightedRanges.set(rangeKey, {
+                    text: match,
+                    type: entity.type,
+                    fullEntity: entity.text
+                });
+                
+                return `<span class="highlight-${entity.type}" data-entity="${entity.text}" data-start="${offset}" data-end="${offset + match.length}">${match}</span>`;
             });
-            
-            return `<span class="highlight-${entity.type}" data-entity="${entity.text}" data-start="${offset}" data-end="${endOffset}">${match}</span>`;
-        });
+        }
     });
     
     textDisplay.innerHTML = text;
@@ -1111,6 +1415,17 @@ function highlightEntities() {
             // Enable text selection within highlighted entities
             el.style.userSelect = 'text';
             el.style.cursor = 'pointer';
+            
+            // Explicitly disable hover effects
+            el.style.transition = 'none';
+            el.addEventListener('mouseenter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            el.addEventListener('mouseover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
         });
     }, 100);
 }

@@ -784,6 +784,46 @@ def annotation_changes(request, annotation_id=None):
         # Calculate text differences for this annotation
         text_with_changes = calculate_text_changes(annotation, changes)
         
+        # Check if JSON format is requested
+        if request.GET.get('format') == 'json':
+            # Get change summary
+            change_summary = annotation.get_change_summary()
+            
+            # Prepare changes data for JSON
+            changes_data = []
+            for change in changes.order_by('-timestamp')[:10]:  # Limit to 10 most recent
+                changes_data.append({
+                    'change_type': change.change_type,
+                    'change_type_display': change.get_change_type_display(),
+                    'entity_name': change.entity_name,
+                    'field_name': change.field_name,
+                    'timestamp': change.timestamp.isoformat() if change.timestamp else None,
+                    'session_id': change.session_id,
+                })
+            
+            # Return JSON response
+            return JsonResponse({
+                'success': True,
+                'annotation': {
+                    'id': annotation.id,
+                    'text': annotation.text,
+                    'drugs': annotation.drugs,
+                    'adverse_events': annotation.adverse_events,
+                    'is_validated': annotation.is_validated,
+                },
+                'summary': {
+                    'total_changes': change_summary['total_changes'],
+                    'drug_additions': change_summary['drug_additions'],
+                    'drug_removals': change_summary['drug_removals'],
+                    'event_additions': change_summary['event_additions'],
+                    'event_removals': change_summary['event_removals'],
+                    'total_additions': change_summary['drug_additions'] + change_summary['event_additions'],
+                    'total_removals': change_summary['drug_removals'] + change_summary['event_removals'],
+                    'bulk_updates': changes.filter(change_type='bulk_update').count(),
+                },
+                'changes': changes_data,
+            })
+        
         context = {
             'annotation': annotation,
             'changes': changes,
@@ -1049,7 +1089,7 @@ def upload_to_huggingface(request):
             hf_token = request.POST.get('hf_token')
             dataset_name = request.POST.get('dataset_name')
             dataset_description = request.POST.get('dataset_description', '')
-            include_changes = request.POST.get('include_changes') == 'on'
+            is_private = request.POST.get('is_private') == 'on'
             filter_type = request.POST.get('filter_type', 'all')
             
             if not hf_token:
@@ -1085,34 +1125,6 @@ def upload_to_huggingface(request):
                     'created_at': annotation.created_at.isoformat() if annotation.created_at else None,
                     'updated_at': annotation.updated_at.isoformat() if annotation.updated_at else None,
                 }
-                
-                if include_changes:
-                    # Add change tracking data
-                    change_summary = annotation.get_change_summary()
-                    data['change_summary'] = {
-                        'total_changes': change_summary['total_changes'],
-                        'drug_additions': change_summary['drug_additions'],
-                        'drug_removals': change_summary['drug_removals'],
-                        'event_additions': change_summary['event_additions'],
-                        'event_removals': change_summary['event_removals'],
-                        'last_modified': change_summary['last_modified'].isoformat() if change_summary['last_modified'] else None,
-                    }
-                    
-                    # Add detailed changes
-                    changes = []
-                    for change in annotation.changes.all():
-                        changes.append({
-                            'change_type': change.change_type,
-                            'change_type_display': change.get_change_type_display(),
-                            'field_name': change.field_name,
-                            'entity_name': change.entity_name,
-                            'old_value': change.old_value,
-                            'new_value': change.new_value,
-                            'timestamp': change.timestamp.isoformat() if change.timestamp else None,
-                            'session_id': change.session_id,
-                        })
-                    data['changes'] = changes
-                
                 dataset_data.append(data)
             
             # Create dataset info
@@ -1122,7 +1134,7 @@ def upload_to_huggingface(request):
                 'upload_timestamp': datetime.now().isoformat(),
                 'total_examples': len(dataset_data),
                 'filter_type': filter_type,
-                'include_changes': include_changes,
+                'is_private': is_private,
                 'validated_count': sum(1 for item in dataset_data if item['is_validated']),
                 'unvalidated_count': sum(1 for item in dataset_data if not item['is_validated']),
             }
@@ -1140,7 +1152,7 @@ def upload_to_huggingface(request):
 - **Validated Examples**: {dataset_info['validated_count']}
 - **Unvalidated Examples**: {dataset_info['unvalidated_count']}
 - **Filter Type**: {filter_type}
-- **Include Changes**: {include_changes}
+- **Privacy**: {'Private' if is_private else 'Public'}
 - **Upload Date**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 ## Data Format
@@ -1152,36 +1164,74 @@ Each example contains:
 - `is_validated`: Validation status
 - `created_at`: Creation timestamp
 - `updated_at`: Last update timestamp
-{f'- `change_summary`: Summary of changes made to the annotation' if include_changes else ''}
-{f'- `changes`: Detailed list of all changes made' if include_changes else ''}
 
 ## Usage
 This dataset can be used for training medical text annotation models or for research in pharmacovigilance and medical text analysis.
 ''', 'text/markdown')
             }
             
-            # Upload to Hugging Face
-            headers = {
-                'Authorization': f'Bearer {hf_token}',
-                'Content-Type': 'multipart/form-data'
-            }
-            
-            # Create dataset repository
-            create_url = 'https://huggingface.co/api/datasets/create'
-            create_data = {
-                'name': dataset_name,
-                'description': dataset_info['description'],
-                'private': False
-            }
-            
-            create_response = requests.post(create_url, headers={'Authorization': f'Bearer {hf_token}'}, json=create_data)
-            
-            if create_response.status_code not in [200, 201, 409]:  # 409 means already exists
-                messages.error(request, f'Failed to create dataset repository: {create_response.text}')
+            # First, try to get user info to validate token
+            try:
+                # Debug: Log the token (first few characters only)
+                token_preview = hf_token[:8] + "..." if len(hf_token) > 8 else hf_token
+                print(f"Attempting to validate token: {token_preview}")
+                
+                user_info_response = requests.get(
+                    'https://huggingface.co/api/whoami',
+                    headers={'Authorization': f'Bearer {hf_token}'},
+                    timeout=10
+                )
+                
+                print(f"Token validation response status: {user_info_response.status_code}")
+                print(f"Token validation response: {user_info_response.text[:200]}...")
+                
+                if user_info_response.status_code != 200:
+                    error_detail = user_info_response.text
+                    if '401' in str(user_info_response.status_code):
+                        messages.error(request, 'Invalid Hugging Face token. Please check your token and try again.')
+                    else:
+                        messages.error(request, f'Error validating token: {error_detail}')
+                    return redirect('annotation_stats')
+                
+                user_info = user_info_response.json()
+                username = user_info.get('name', '')
+                
+                print(f"Retrieved username: {username}")
+                
+                if not username:
+                    messages.error(request, 'Could not retrieve username from token. Please check your token.')
+                    return redirect('annotation_stats')
+                    
+            except requests.exceptions.RequestException as e:
+                print(f"Network error during token validation: {str(e)}")
+                messages.error(request, f'Network error while validating token: {str(e)}')
                 return redirect('annotation_stats')
             
-            # Upload files
-            upload_url = f'https://huggingface.co/api/datasets/{dataset_name}/upload'
+            # Create dataset repository using the correct API endpoint
+            create_url = f'https://huggingface.co/api/repos/create'
+            create_data = {
+                'name': dataset_name,
+                'type': 'dataset',
+                'description': dataset_info['description'],
+                'private': is_private
+            }
+            
+            create_response = requests.post(
+                create_url, 
+                headers={'Authorization': f'Bearer {hf_token}'}, 
+                json=create_data
+            )
+            
+            if create_response.status_code not in [200, 201, 409]:  # 409 means already exists
+                error_msg = create_response.text
+                if 'already exists' in error_msg.lower():
+                    messages.error(request, f'Dataset "{dataset_name}" already exists. Please choose a different name.')
+                else:
+                    messages.error(request, f'Failed to create dataset repository: {error_msg}')
+                return redirect('annotation_stats')
+            
+            # Upload files using the datasets API
+            upload_url = f'https://huggingface.co/api/datasets/{username}/{dataset_name}/upload'
             
             # Prepare multipart form data
             import io
@@ -1214,8 +1264,9 @@ This dataset can be used for training medical text annotation models or for rese
             )
             
             if upload_response.status_code in [200, 201]:
-                dataset_url = f'https://huggingface.co/datasets/{dataset_name}'
-                messages.success(request, f'Successfully uploaded dataset to Hugging Face! View it at: {dataset_url}')
+                dataset_url = f'https://huggingface.co/datasets/{username}/{dataset_name}'
+                privacy_status = 'private' if is_private else 'public'
+                messages.success(request, f'Successfully uploaded {privacy_status} dataset to Hugging Face! View it at: {dataset_url}')
             else:
                 messages.error(request, f'Failed to upload dataset: {upload_response.text}')
             
@@ -1226,3 +1277,41 @@ This dataset can be used for training medical text annotation models or for rese
     
     # GET request - show upload form
     return render(request, 'annotation/upload_hf.html')
+
+
+def test_hf_token(request):
+    """Test endpoint to validate Hugging Face token"""
+    if request.method == 'POST':
+        hf_token = request.POST.get('hf_token')
+        if not hf_token:
+            return JsonResponse({'success': False, 'error': 'No token provided'})
+        
+        try:
+            # Test the token
+            response = requests.get(
+                'https://huggingface.co/api/whoami',
+                headers={'Authorization': f'Bearer {hf_token}'},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                user_info = response.json()
+                username = user_info.get('name', '')
+                return JsonResponse({
+                    'success': True, 
+                    'username': username,
+                    'message': f'Token is valid for user: {username}'
+                })
+            else:
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'Token validation failed: {response.status_code} - {response.text}'
+                })
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': f'Error testing token: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'error': 'POST method required'})

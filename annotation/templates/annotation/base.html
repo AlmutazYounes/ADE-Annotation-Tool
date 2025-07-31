@@ -89,16 +89,13 @@
             --gray-800: #1e293b;
             --gray-900: #0f172a;
             
-            /* Medical Theme Colors - Enhanced */
-            --medical-blue: #0ea5e9;
-            --medical-blue-light: #38bdf8;
-            --medical-blue-dark: #0284c7;
-            --medical-green: #10b981;
-            --medical-green-light: #34d399;
-            --medical-green-dark: #059669;
-            --medical-red: #f43f5e;
-            --medical-red-light: #fb7185;
-            --medical-red-dark: #e11d48;
+            /* Medical Theme Colors - Normalized */
+            --medical-drug: #10b981;
+            --medical-drug-light: #34d399;
+            --medical-drug-dark: #059669;
+            --medical-ade: #f43f5e;
+            --medical-ade-light: #fb7185;
+            --medical-ade-dark: #e11d48;
             --medical-purple: #a855f7;
             --medical-purple-light: #c084fc;
             --medical-purple-dark: #9333ea;
@@ -306,6 +303,41 @@
             color: var(--primary-700);
         }
         
+        .card-header h6 {
+            color: var(--primary-700);
+            font-weight: 700;
+        }
+        
+        .card-header .text-primary {
+            color: var(--primary-600) !important;
+        }
+        
+        /* Override Bootstrap bg-light for better contrast */
+        .bg-light {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0.1) 100%) !important;
+            color: var(--primary-700) !important;
+        }
+        
+        .bg-light h6,
+        .bg-light .h6 {
+            color: var(--primary-700) !important;
+            font-weight: 700;
+        }
+        
+        .bg-light .text-primary {
+            color: var(--primary-600) !important;
+        }
+        
+        /* Improve keyboard shortcut styling */
+        kbd {
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%) !important;
+            color: white !important;
+            border: 1px solid var(--primary-700) !important;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+        }
+        
         .card-body {
             padding: var(--space-xl);
         }
@@ -488,6 +520,16 @@
                 border: 1px solid var(--gray-300);
             }
         }
+        
+        /* Custom Hugging Face Icon Styling */
+        .huggingface-icon {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+        
+        .huggingface-icon:hover {
+            color: #f7931e;
+        }
     </style>
 </head>
 <body>
@@ -502,9 +544,7 @@
                 <a class="nav-link" href="{% url 'annotation_list' %}">
                     <i class="fas fa-list-ul"></i> Annotations
                 </a>
-                <a class="nav-link" href="{% url 'annotation_changes' %}">
-                    <i class="fas fa-history"></i> Changes
-                </a>
+
                 <a class="nav-link" href="{% url 'import_jsonl' %}">
                     <i class="fas fa-cloud-upload-alt"></i> Import
                 </a>
@@ -513,26 +553,14 @@
                         <i class="fas fa-cloud-download-alt"></i> Export
                     </a>
                     <ul class="dropdown-menu">
-                        <li><h6 class="dropdown-header">Export Options</h6></li>
-                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=annotated">
-                            <i class="fas fa-tags text-success"></i> Annotated Only
+                        <li><a class="dropdown-item" href="{% url 'upload_to_huggingface' %}">
+                            <i class="fab fa-huggingface huggingface-icon"></i> Hugging Face
                         </a></li>
                         <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=validated">
-                            <i class="fas fa-check-circle text-primary"></i> Validated Only
+                            <i class="fas fa-check-circle"></i> Export Validated Only
                         </a></li>
-                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=annotated_validated">
-                            <i class="fas fa-certificate text-warning"></i> Annotated & Validated
-                        </a></li>
-                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=modified">
-                            <i class="fas fa-edit text-info"></i> Modified Only
-                        </a></li>
-                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=all">
-                            <i class="fas fa-download text-muted"></i> All Texts
-                        </a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'export_entities_jsonl' %}">
-                            <i class="fas fa-code text-secondary"></i> Export Entities Format
+                            <i class="fas fa-database"></i> Export All Data
                         </a></li>
                     </ul>
                 </div>

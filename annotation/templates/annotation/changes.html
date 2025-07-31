@@ -6,103 +6,84 @@
 
 {% block extra_css %}
 <style>
-/* Visual indicators for changes */
+/* Modern Change Indicators - Clean and Readable */
 .removed-entity {
-    background: var(--danger-100) !important;
-    color: var(--danger-700) !important;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-weight: 500;
-    border: 1px solid var(--danger-200);
-    text-decoration: line-through;
-    text-decoration-color: var(--danger-600);
-    text-decoration-thickness: 1px;
-    text-decoration-style: solid;
-    margin: 0 1px;
-    position: relative;
-    font-size: 1em;
-}
-.removed-entity::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--danger-600);
-    transform: translateY(-50%);
-    z-index: 1;
-}
-.removed-drug {
-    background: var(--success-100) !important;
-    color: var(--success-700) !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-weight: 700 !important;
-    border: 2px solid var(--success-200) !important;
-    margin: 0 1px !important;
-    position: relative !important;
-    font-size: 1em !important;
-    display: inline !important;
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+    padding: 3px 6px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    border: 2px solid #fecaca !important;
     text-decoration: line-through !important;
-    text-decoration-color: var(--success-600) !important;
-    text-decoration-thickness: 1px !important;
-    text-decoration-style: solid !important;
-}
-.removed-ade {
-    background: var(--danger-100) !important;
-    color: var(--danger-700) !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-weight: 700 !important;
-    border: 2px solid var(--danger-200) !important;
-    margin: 0 1px !important;
+    text-decoration-color: #dc2626 !important;
+    text-decoration-thickness: 2px !important;
+    margin: 0 2px !important;
     position: relative !important;
-    font-size: 1em !important;
-    display: inline !important;
-    text-decoration: line-through !important;
-    text-decoration-color: var(--danger-600) !important;
-    text-decoration-thickness: 1px !important;
-    text-decoration-style: solid !important;
-}
-.added-drug {
-    background: var(--medical-blue) !important;
-    color: #fff !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-weight: 700 !important;
-    border: 2px solid var(--medical-blue-dark) !important;
-    margin: 0 1px !important;
-    position: relative !important;
-    font-size: 1em !important;
-    display: inline !important;
-}
-.added-ade {
-    background: var(--medical-red) !important;
-    color: #fff !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-weight: 700 !important;
-    border: 2px solid var(--medical-red-dark) !important;
-    margin: 0 1px !important;
-    position: relative !important;
-    font-size: 1em !important;
-    display: inline !important;
+    font-size: 0.95em !important;
+    display: inline-block !important;
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1) !important;
 }
 
-/* Super-specific highlight for added drugs */
-div.clinical-text-display .added-drug,
-div.clinical-text-preview .added-drug {
-    background: var(--medical-blue) !important;
-    color: #fff !important;
-    border: 2px solid var(--medical-blue-dark) !important;
+.removed-drug {
+    background: #dcfce7 !important;
+    color: #166534 !important;
+    padding: 3px 6px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    border: 2px solid #bbf7d0 !important;
+    margin: 0 2px !important;
+    position: relative !important;
+    font-size: 0.95em !important;
+    display: inline-block !important;
+    text-decoration: line-through !important;
+    text-decoration-color: #16a34a !important;
+    text-decoration-thickness: 2px !important;
+    box-shadow: 0 1px 3px rgba(22, 163, 74, 0.1) !important;
 }
-/* Super-specific highlight for added ADEs */
-div.clinical-text-display .added-ade,
-div.clinical-text-preview .added-ade {
-    background: var(--medical-red) !important;
-    color: #fff !important;
-    border: 2px solid var(--medical-red-dark) !important;
+
+.removed-ade {
+    background: #fef2f2 !important;
+    color: #991b1b !important;
+    padding: 3px 6px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    border: 2px solid #fecaca !important;
+    margin: 0 2px !important;
+    position: relative !important;
+    font-size: 0.95em !important;
+    display: inline-block !important;
+    text-decoration: line-through !important;
+    text-decoration-color: #dc2626 !important;
+    text-decoration-thickness: 2px !important;
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.added-drug {
+    background: #16a34a !important;
+    color: #ffffff !important;
+    padding: 3px 6px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    border: 2px solid #15803d !important;
+    margin: 0 2px !important;
+    position: relative !important;
+    font-size: 0.95em !important;
+    display: inline-block !important;
+    box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3) !important;
+}
+
+.added-ade {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    padding: 3px 6px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    border: 2px solid #b91c1c !important;
+    margin: 0 2px !important;
+    position: relative !important;
+    font-size: 0.95em !important;
+    display: inline-block !important;
+    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3) !important;
 }
 
 /* Enhanced styling for grouped changes */
@@ -144,111 +125,182 @@ div.clinical-text-preview .added-ade {
     text-align: center;
 }
 
-/* Clinical text display styles */
+/* Modern Clinical Text Display */
 .clinical-text-display {
     font-size: 1.1rem;
     line-height: 1.8;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-    max-height: 400px;
+    padding: 1.5rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    max-height: 500px;
     overflow-y: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: #374151;
 }
 
 .clinical-text-preview {
-    font-size: 0.9rem;
-    line-height: 1.5;
-    max-height: 100px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-height: 120px;
     overflow-y: auto;
-    padding: 0.5rem;
-    background: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
+    padding: 1rem;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Modern Card Styling */
+.card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 12px 12px 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Modern Button Styling */
+.btn-outline-primary {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+}
+
+/* Modern Badge Styling */
+.badge.bg-secondary {
+    background: #6b7280 !important;
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 0.4em 0.8em;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.badge.bg-secondary:hover {
+    background: #4b5563 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(107, 114, 128, 0.2);
+}
+
+/* Page Header Styling */
+.page-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.page-header h2 {
+    color: #1e293b;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-header .text-primary {
+    color: #3b82f6 !important;
+}
+
+/* Empty State Styling */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 2px dashed #d1d5db;
+}
+
+.empty-state i {
+    color: #9ca3af;
+    margin-bottom: 1rem;
+}
+
+.empty-state h5 {
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #9ca3af;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .clinical-text-display {
+        font-size: 1rem;
+        padding: 1rem;
+    }
+    
+    .clinical-text-preview {
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+    
+    .page-header {
+        padding: 1rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem;
+    }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<style>
-.removed-drug {
-    background: #d4edda !important;
-    color: #155724 !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-weight: 700 !important;
-    border: 2px solid #c3e6cb !important;
-    margin: 0 1px !important;
-    position: relative !important;
-    font-size: 1em !important;
-    display: inline !important;
-    text-decoration: line-through !important;
-    text-decoration-color: #000 !important;
-    text-decoration-thickness: 1px !important;
-    text-decoration-style: solid !important;
-}
-.removed-ade {
-    background: #f8d7da !important;
-    color: #721c24 !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-weight: 700 !important;
-    border: 2px solid #f5c6cb !important;
-    margin: 0 1px !important;
-    position: relative !important;
-    font-size: 1em !important;
-    display: inline !important;
-    text-decoration: line-through !important;
-    text-decoration-color: #000 !important;
-    text-decoration-thickness: 1px !important;
-    text-decoration-style: solid !important;
-}
-.added-drug {
-    background: #28a745 !important; /* vibrant green */
-    color: #fff !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-weight: 700 !important;
-    border: 2px solid #1e7e34 !important; /* darker green border */
-    margin: 0 1px !important;
-    position: relative !important;
-    font-size: 1em !important;
-    display: inline !important;
-}
-.added-ade {
-    background: #dc3545 !important; /* vibrant red */
-    color: #fff !important;
-    padding: 2px 4px !important;
-    border-radius: 3px !important;
-    font-weight: 700 !important;
-    border: 2px solid #a71d2a !important; /* darker red border */
-    margin: 0 1px !important;
-    position: relative !important;
-    font-size: 1em !important;
-    display: inline !important;
-}
-</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>
-                    {% if show_specific %}
-                        <i class="fas fa-history text-primary"></i> Changes for Annotation #{{ annotation.id }}
-                    {% else %}
-                        <i class="fas fa-history text-primary"></i> Annotation Change History
-                    {% endif %}
-                </h2>
-                <div>
-                    {% if show_specific %}
-                        <a href="{% url 'annotation_single' annotation.id %}" class="btn btn-outline-primary">
-                            <i class="fas fa-arrow-left"></i> Back to Annotation
-                        </a>
-                    {% else %}
-                        <a href="{% url 'annotation_list' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-arrow-left"></i> Back to Annotations
-                        </a>
-                    {% endif %}
+            <!-- Modern Page Header -->
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2>
+                        {% if show_specific %}
+                            <i class="fas fa-history text-primary"></i> Changes for Annotation #{{ annotation.id }}
+                        {% else %}
+                            <i class="fas fa-history text-primary"></i> Annotation Change History
+                        {% endif %}
+                    </h2>
+                    <div>
+                        {% if show_specific %}
+                            <a href="{% url 'annotation_single' annotation.id %}" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left"></i> Back to Annotation
+                            </a>
+                        {% else %}
+                            <a href="{% url 'annotation_list' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-arrow-left"></i> Back to Annotations
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -256,8 +308,8 @@ div.clinical-text-preview .added-ade {
                 {% if changes %}
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h6 class="mb-0">
-                                <i class="fas fa-file-medical"></i> Clinical Text with Changes
+                            <h6 class="mb-0 fw-semibold text-gray-800">
+                                <i class="fas fa-file-medical text-primary"></i> Clinical Text with Changes
                             </h6>
                         </div>
                         <div class="card-body">
@@ -267,10 +319,10 @@ div.clinical-text-preview .added-ade {
                         </div>
                     </div>
                 {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No changes recorded</h5>
-                        <p class="text-muted">No changes have been made to this annotation yet.</p>
+                    <div class="empty-state">
+                        <i class="fas fa-inbox fa-3x"></i>
+                        <h5>No changes recorded</h5>
+                        <p>No changes have been made to this annotation yet.</p>
                     </div>
                 {% endif %}
             {% else %}
@@ -279,12 +331,16 @@ div.clinical-text-preview .added-ade {
                         {% for summary in annotation_summaries %}
                         <div class="col-12 mb-4">
                             <div class="card">
-                                <div class="card-header pb-1 pt-2">
-                                    <a href="{% url 'annotation_single' summary.annotation.id %}" class="text-decoration-none">
-                                        <span class="badge bg-secondary" style="cursor:pointer;">#{{ summary.annotation.id }}</span>
-                                    </a>
+                                <div class="card-header">
+                                    <div class="d-flex align-items-center">
+                                        <a href="{% url 'annotation_single' summary.annotation.id %}" class="text-decoration-none">
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-hashtag"></i> {{ summary.annotation.id }}
+                                            </span>
+                                        </a>
+                                    </div>
                                 </div>
-                                <div class="card-body pt-2">
+                                <div class="card-body">
                                     <div class="clinical-text-preview">
                                         {{ summary.text_with_changes|safe }}
                                     </div>
@@ -294,10 +350,10 @@ div.clinical-text-preview .added-ade {
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No changes recorded</h5>
-                        <p class="text-muted">No annotation changes have been recorded yet.</p>
+                    <div class="empty-state">
+                        <i class="fas fa-inbox fa-3x"></i>
+                        <h5>No changes recorded</h5>
+                        <p>No annotation changes have been recorded yet.</p>
                     </div>
                 {% endif %}
             {% endif %}
@@ -311,41 +367,39 @@ function applyChangeHighlighting() {
     const clinicalTextElements = document.querySelectorAll('.clinical-text-display, .clinical-text-preview');
     
     clinicalTextElements.forEach(element => {
-        // Get the text content
-        let text = element.textContent || element.innerText;
-        
-        // Find all removed and added entities
-        const removedElements = element.querySelectorAll('.removed-entity');
-        const addedElements = element.querySelectorAll('.added-entity');
-        
         // Apply styling to removed entities
+        const removedElements = element.querySelectorAll('.removed-entity');
         removedElements.forEach(el => {
-            el.style.backgroundColor = '#f8d7da';
-            el.style.color = '#721c24';
-            el.style.padding = '2px 4px';
-            el.style.borderRadius = '3px';
-            el.style.fontWeight = '500';
-            el.style.border = '1px solid #f5c6cb';
+            el.style.backgroundColor = '#fee2e2';
+            el.style.color = '#991b1b';
+            el.style.padding = '3px 6px';
+            el.style.borderRadius = '6px';
+            el.style.fontWeight = '600';
+            el.style.border = '2px solid #fecaca';
             el.style.textDecoration = 'line-through';
-            el.style.textDecorationColor = '#000';
-            el.style.textDecorationThickness = '1px';
-            el.style.textDecorationStyle = 'solid';
-            el.style.margin = '0 1px';
+            el.style.textDecorationColor = '#dc2626';
+            el.style.textDecorationThickness = '2px';
+            el.style.margin = '0 2px';
             el.style.position = 'relative';
-            el.style.fontSize = '1em';
+            el.style.fontSize = '0.95em';
+            el.style.display = 'inline-block';
+            el.style.boxShadow = '0 1px 3px rgba(220, 38, 38, 0.1)';
         });
         
         // Apply styling to added entities
+        const addedElements = element.querySelectorAll('.added-entity');
         addedElements.forEach(el => {
-            el.style.backgroundColor = '#d4edda';
-            el.style.color = '#155724';
-            el.style.padding = '2px 4px';
-            el.style.borderRadius = '3px';
-            el.style.fontWeight = '500';
-            el.style.border = '1px solid #c3e6cb';
-            el.style.margin = '0 1px';
+            el.style.backgroundColor = '#16a34a';
+            el.style.color = '#ffffff';
+            el.style.padding = '3px 6px';
+            el.style.borderRadius = '6px';
+            el.style.fontWeight = '700';
+            el.style.border = '2px solid #15803d';
+            el.style.margin = '0 2px';
             el.style.position = 'relative';
-            el.style.fontSize = '1em';
+            el.style.fontSize = '0.95em';
+            el.style.display = 'inline-block';
+            el.style.boxShadow = '0 2px 4px rgba(22, 163, 74, 0.3)';
         });
     });
 }

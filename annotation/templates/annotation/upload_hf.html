@@ -46,6 +46,9 @@
                 <div class="form-help">
                     <i class="fas fa-info-circle"></i>
                     <span>Get your token from <a href="https://huggingface.co/settings/tokens" target="_blank">Hugging Face Settings</a></span>
+                    <button type="button" class="btn btn-sm btn-outline-info ms-2" onclick="testToken()">
+                        <i class="fas fa-check"></i> Test Token
+                    </button>
                 </div>
             </div>
 
@@ -95,15 +98,15 @@
                 </div>
             </div>
 
-            <!-- Include Changes Option -->
+            <!-- Private Dataset Option -->
             <div class="form-group">
                 <div class="checkbox-group">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="include_changes" name="include_changes" class="checkbox-input">
+                        <input type="checkbox" id="is_private" name="is_private" class="checkbox-input">
                         <span class="checkmark"></span>
                         <div class="checkbox-content">
-                            <h4>Include Change Tracking Data</h4>
-                            <p>Add detailed change history and statistics for each annotation</p>
+                            <h4>Make Dataset Private</h4>
+                            <p>Keep your dataset private and only accessible to you</p>
                         </div>
                     </label>
                 </div>
@@ -135,7 +138,7 @@
                     <li><strong>data.jsonl</strong> - Your annotation data in JSONL format</li>
                     <li><strong>dataset_info.json</strong> - Metadata about the dataset</li>
                     <li><strong>README.md</strong> - Documentation for the dataset</li>
-                    <li><strong>Change tracking data</strong> - If enabled, detailed change history</li>
+                    <li><strong>Privacy settings</strong> - Public or private dataset option</li>
                 </ul>
             </div>
         </div>
@@ -149,6 +152,7 @@
                 <ul>
                     <li>Your Hugging Face token is only used for this upload</li>
                     <li>Datasets are public by default (can be made private)</li>
+                    <li>Private datasets are only accessible to you</li>
                     <li>No sensitive data is stored on our servers</li>
                     <li>You can delete the dataset from Hugging Face anytime</li>
                 </ul>
@@ -200,12 +204,14 @@
     font-weight: 700;
     margin: 0;
     letter-spacing: -0.025em;
+    color: white;
 }
 
 .header-text p {
     font-size: 1.1rem;
     opacity: 0.9;
     margin: 0.5rem 0 0 0;
+    color: white;
 }
 
 /* Upload Section */
@@ -225,7 +231,7 @@
 .section-header h2 {
     font-size: 1.75rem;
     font-weight: 600;
-    color: var(--gray-900);
+    color: var(--primary-700);
     margin: 0 0 0.5rem 0;
     display: flex;
     align-items: center;
@@ -253,7 +259,7 @@
 
 .form-label {
     font-weight: 600;
-    color: var(--gray-700);
+    color: var(--primary-700);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -480,7 +486,7 @@ textarea.form-control {
 .info-header h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--gray-900);
+    color: var(--primary-700);
     margin: 0;
 }
 
@@ -492,7 +498,7 @@ textarea.form-control {
 
 .info-content li {
     padding: 0.5rem 0;
-    color: var(--gray-700);
+    color: var(--primary-600);
     font-size: 0.9rem;
     border-bottom: 1px solid var(--gray-100);
 }
@@ -502,7 +508,7 @@ textarea.form-control {
 }
 
 .info-content strong {
-    color: var(--gray-900);
+    color: var(--primary-700);
 }
 
 /* Responsive Design */
@@ -548,12 +554,19 @@ function togglePassword() {
     const input = document.getElementById('hf_token');
     const button = document.querySelector('.toggle-password i');
     
+    if (!input || !button) {
+        console.error('Could not find token input or toggle button');
+        return;
+    }
+    
     if (input.type === 'password') {
         input.type = 'text';
         button.className = 'fas fa-eye-slash';
+        button.title = 'Hide token';
     } else {
         input.type = 'password';
         button.className = 'fas fa-eye';
+        button.title = 'Show token';
     }
 }
 
@@ -568,9 +581,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const isValid = /^[a-zA-Z0-9_-]*$/.test(value);
         
         if (isValid) {
-            this.style.borderColor = var(--gray-200);
+            this.style.borderColor = '#e5e7eb'; // gray-200
         } else {
-            this.style.borderColor = var(--danger-500);
+            this.style.borderColor = '#ef4444'; // danger-500
         }
     });
     
@@ -603,5 +616,46 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
     });
 });
+
+// Test token function
+function testToken() {
+    const token = document.getElementById('hf_token').value;
+    if (!token) {
+        alert('Please enter your Hugging Face token first');
+        return;
+    }
+    
+    const testBtn = document.querySelector('button[onclick="testToken()"]');
+    const originalText = testBtn.innerHTML;
+    testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    testBtn.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('hf_token', token);
+    
+    fetch('/annotation/test-hf-token/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ Token is valid!\nUsername: ${data.username}\n${data.message}`);
+        } else {
+            alert(`❌ Token validation failed:\n${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error testing token:', error);
+        alert('❌ Error testing token. Please check your connection and try again.');
+    })
+    .finally(() => {
+        testBtn.innerHTML = originalText;
+        testBtn.disabled = false;
+    });
+}
 </script>
 {% endblock %} 
