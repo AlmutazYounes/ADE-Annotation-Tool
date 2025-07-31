@@ -7,6 +7,8 @@ from django.db.models import Q, Count, Max
 from .models import TextAnnotation, AnnotationChange, DrugListEntry, ADEListEntry
 import json
 import re
+import requests
+from datetime import datetime
 
 # Global sets for uploaded drugs/ADEs, initialized from data
 UPLOADED_DRUGS = set(d for ann in TextAnnotation.objects.all() for d in ann.drugs)
@@ -261,6 +263,7 @@ def export_jsonl(request):
     try:
         # Get filter type from query parameters
         filter_type = request.GET.get('filter', 'all')
+        include_changes = request.GET.get('include_changes', 'false').lower() == 'true'
         
         # Start with all annotations
         annotations = TextAnnotation.objects.all()
@@ -290,6 +293,10 @@ def export_jsonl(request):
         }
         filename_suffix = filter_names.get(filter_type, 'all')
         
+        # Add changes suffix if including changes
+        if include_changes:
+            filename_suffix += '_with_changes'
+        
         # Create response
         response = HttpResponse(content_type='application/json')
         response['Content-Disposition'] = f'attachment; filename="exported_annotations_{filename_suffix}.jsonl"'
@@ -299,8 +306,53 @@ def export_jsonl(request):
                 'text': annotation.text,
                 'drugs': annotation.drugs,
                 'adverse_events': annotation.adverse_events,
-                'is_validated': annotation.is_validated
+                'is_validated': annotation.is_validated,
+                'created_at': annotation.created_at.isoformat() if annotation.created_at else None,
+                'updated_at': annotation.updated_at.isoformat() if annotation.updated_at else None,
             }
+            
+            # Include change tracking data if requested
+            if include_changes:
+                # Get change summary for this annotation
+                change_summary = annotation.get_change_summary()
+                # Create JSON-serializable version of change summary
+                serializable_change_summary = {
+                    'total_changes': change_summary['total_changes'],
+                    'drug_additions': change_summary['drug_additions'],
+                    'drug_removals': change_summary['drug_removals'],
+                    'event_additions': change_summary['event_additions'],
+                    'event_removals': change_summary['event_removals'],
+                    'last_modified': change_summary['last_modified'].isoformat() if change_summary['last_modified'] else None,
+                }
+                data['change_summary'] = serializable_change_summary
+                
+                # Get detailed changes
+                changes = []
+                for change in annotation.changes.all():
+                    changes.append({
+                        'change_type': change.change_type,
+                        'change_type_display': change.get_change_type_display(),
+                        'field_name': change.field_name,
+                        'entity_name': change.entity_name,
+                        'old_value': change.old_value,
+                        'new_value': change.new_value,
+                        'timestamp': change.timestamp.isoformat() if change.timestamp else None,
+                        'session_id': change.session_id,
+                    })
+                data['changes'] = changes
+                
+                # Add aggregated change statistics
+                data['change_statistics'] = {
+                    'total_changes': change_summary['total_changes'],
+                    'drug_additions': change_summary['drug_additions'],
+                    'drug_removals': change_summary['drug_removals'],
+                    'event_additions': change_summary['event_additions'],
+                    'event_removals': change_summary['event_removals'],
+                    'total_additions': change_summary['drug_additions'] + change_summary['event_additions'],
+                    'total_removals': change_summary['drug_removals'] + change_summary['event_removals'],
+                    'last_modified': change_summary['last_modified'].isoformat() if change_summary['last_modified'] else None,
+                }
+            
             response.write(json.dumps(data, ensure_ascii=False) + '\n')
         
         total_count = TextAnnotation.objects.count()
@@ -333,11 +385,15 @@ def export_entities_jsonl(request):
         return positions
     
     try:
+        include_changes = request.GET.get('include_changes', 'false').lower() == 'true'
         annotations = TextAnnotation.objects.all()
         
         # Create response
         response = HttpResponse(content_type='application/json')
-        response['Content-Disposition'] = 'attachment; filename="exported_annotations_entities.jsonl"'
+        filename = 'exported_annotations_entities'
+        if include_changes:
+            filename += '_with_changes'
+        response['Content-Disposition'] = f'attachment; filename="{filename}.jsonl"'
         
         for annotation in annotations:
             entities = []
@@ -360,21 +416,67 @@ def export_entities_jsonl(request):
                     entities.append({
                         "start": start,
                         "end": end,
-                        "label": "ADVERSE_EVENT", 
+                        "label": "ADVERSE_EVENT",
                         "text": event
                     })
             
             data = {
                 'text': annotation.text,
                 'entities': entities,
-                'is_validated': annotation.is_validated
+                'is_validated': annotation.is_validated,
+                'created_at': annotation.created_at.isoformat() if annotation.created_at else None,
+                'updated_at': annotation.updated_at.isoformat() if annotation.updated_at else None,
             }
+            
+            # Include change tracking data if requested
+            if include_changes:
+                # Get change summary for this annotation
+                change_summary = annotation.get_change_summary()
+                # Create JSON-serializable version of change summary
+                serializable_change_summary = {
+                    'total_changes': change_summary['total_changes'],
+                    'drug_additions': change_summary['drug_additions'],
+                    'drug_removals': change_summary['drug_removals'],
+                    'event_additions': change_summary['event_additions'],
+                    'event_removals': change_summary['event_removals'],
+                    'last_modified': change_summary['last_modified'].isoformat() if change_summary['last_modified'] else None,
+                }
+                data['change_summary'] = serializable_change_summary
+                
+                # Get detailed changes
+                changes = []
+                for change in annotation.changes.all():
+                    changes.append({
+                        'change_type': change.change_type,
+                        'change_type_display': change.get_change_type_display(),
+                        'field_name': change.field_name,
+                        'entity_name': change.entity_name,
+                        'old_value': change.old_value,
+                        'new_value': change.new_value,
+                        'timestamp': change.timestamp.isoformat() if change.timestamp else None,
+                        'session_id': change.session_id,
+                    })
+                data['changes'] = changes
+                
+                # Add aggregated change statistics
+                data['change_statistics'] = {
+                    'total_changes': change_summary['total_changes'],
+                    'drug_additions': change_summary['drug_additions'],
+                    'drug_removals': change_summary['drug_removals'],
+                    'event_additions': change_summary['event_additions'],
+                    'event_removals': change_summary['event_removals'],
+                    'total_additions': change_summary['drug_additions'] + change_summary['event_additions'],
+                    'total_removals': change_summary['drug_removals'] + change_summary['event_removals'],
+                    'last_modified': change_summary['last_modified'].isoformat() if change_summary['last_modified'] else None,
+                }
+            
             response.write(json.dumps(data, ensure_ascii=False) + '\n')
         
+        messages.success(request, f'Successfully exported {annotations.count()} annotations with entity positions!')
         return response
         
     except Exception as e:
-        messages.error(request, f'Error exporting entities: {str(e)}')
+        messages.error(request, f'Error exporting data: {str(e)}')
         return redirect('annotation_list')
 
 
@@ -384,20 +486,35 @@ def annotation_stats(request):
     validated_count = TextAnnotation.objects.filter(is_validated=True).count()
     unvalidated_count = total_count - validated_count
     
-    # Get drug statistics
+    # Get drug statistics and single tag type statistics
     all_drugs = []
+    only_drug_count = 0
+    only_adverse_event_count = 0
+    mixed_count = 0
+
     for annotation in TextAnnotation.objects.all():
         all_drugs.extend(annotation.drugs)
-    
+
+        # Count single tag type annotations
+        has_drugs = len(annotation.drugs) > 0
+        has_adverse_events = len(annotation.adverse_events) > 0
+
+        if has_drugs and not has_adverse_events:
+            only_drug_count += 1
+        elif has_adverse_events and not has_drugs:
+            only_adverse_event_count += 1
+        elif has_drugs and has_adverse_events:
+            mixed_count += 1
+
     drug_stats = {}
     for drug in all_drugs:
         drug_stats[drug] = drug_stats.get(drug, 0) + 1
-    
+
     # Get adverse event statistics
     all_events = []
     for annotation in TextAnnotation.objects.all():
         all_events.extend(annotation.adverse_events)
-    
+
     event_stats = {}
     for event in all_events:
         event_stats[event] = event_stats.get(event, 0) + 1
@@ -432,6 +549,10 @@ def annotation_stats(request):
         'total_unique_events': len(event_stats),
         'total_drugs': len(all_drugs),
         'total_events': len(all_events),
+        # Single tag type stats
+        'only_drug_count': only_drug_count,
+        'only_adverse_event_count': only_adverse_event_count,
+        'mixed_count': mixed_count,
         # Change stats
         'total_changes': total_changes,
         'drug_additions': drug_additions,
@@ -446,6 +567,213 @@ def annotation_stats(request):
     return render(request, 'annotation/stats.html', context)
 
 
+def entity_examples(request):
+    """AJAX endpoint to get examples of a specific entity"""
+    entity_name = request.GET.get('entity')
+    entity_type = request.GET.get('type')  # 'drug' or 'adverse_event'
+
+    if not entity_name or not entity_type:
+        return JsonResponse({'error': 'Missing entity name or type'}, status=400)
+
+    # Filter annotations based on entity type
+    # Note: Using Python filtering instead of database filtering for SQLite compatibility
+    all_annotations = TextAnnotation.objects.all()
+    annotations = []
+
+    for annotation in all_annotations:
+        if entity_type == 'drug' and entity_name in annotation.drugs:
+            annotations.append(annotation)
+        elif entity_type == 'adverse_event' and entity_name in annotation.adverse_events:
+            annotations.append(annotation)
+
+    if not annotations:
+        return JsonResponse({
+            'entity_name': entity_name,
+            'entity_type': entity_type,
+            'total_count': 0,
+            'examples': []
+        })
+
+    # Prepare response data
+    examples = []
+    for annotation in annotations[:20]:  # Limit to 20 examples for performance
+        # Highlight the entity in the text
+        highlighted_text = highlight_entity_in_text(annotation.text, entity_name)
+
+        examples.append({
+            'id': annotation.id,
+            'text': annotation.text,
+            'highlighted_text': highlighted_text,
+            'is_validated': annotation.is_validated,
+            'created_at': annotation.created_at.strftime('%Y-%m-%d %H:%M'),
+        })
+
+    return JsonResponse({
+        'entity_name': entity_name,
+        'entity_type': entity_type,
+        'total_count': len(annotations),
+        'examples': examples
+    })
+
+
+def highlight_entity_in_text(text, entity_name):
+    """Highlight entity occurrences in text with HTML spans"""
+    import re
+
+    # Escape special regex characters in entity name
+    escaped_entity = re.escape(entity_name)
+
+    # Create pattern for case-insensitive matching with word boundaries
+    pattern = r'\b' + escaped_entity + r'\b'
+
+    # Replace with highlighted version
+    highlighted = re.sub(
+        pattern,
+        f'<span class="entity-highlight">{entity_name}</span>',
+        text,
+        flags=re.IGNORECASE
+    )
+
+    return highlighted
+
+
+def entity_examples_page(request):
+    """Dedicated page for displaying entity examples"""
+    from django.core.paginator import Paginator
+
+    entity_name = request.GET.get('entity')
+    entity_type = request.GET.get('type')
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', 'all')
+    page_number = request.GET.get('page', 1)
+
+    # Handle both specific entity examples and single tag type examples
+    if not entity_type:
+        return redirect('annotation_stats')
+
+    # Filter annotations based on entity type
+    all_annotations = TextAnnotation.objects.all()
+    matching_annotations = []
+
+    if entity_type in ['only_drug', 'only_adverse_event', 'mixed']:
+        # Handle single tag type filtering
+        for annotation in all_annotations:
+            has_drugs = len(annotation.drugs) > 0
+            has_adverse_events = len(annotation.adverse_events) > 0
+
+            if entity_type == 'only_drug' and has_drugs and not has_adverse_events:
+                matching_annotations.append(annotation)
+            elif entity_type == 'only_adverse_event' and has_adverse_events and not has_drugs:
+                matching_annotations.append(annotation)
+            elif entity_type == 'mixed' and has_drugs and has_adverse_events:
+                matching_annotations.append(annotation)
+    else:
+        # Handle specific entity filtering (existing functionality)
+        if not entity_name:
+            return redirect('annotation_stats')
+
+        for annotation in all_annotations:
+            if entity_type == 'drug' and entity_name in annotation.drugs:
+                matching_annotations.append(annotation)
+            elif entity_type == 'adverse_event' and entity_name in annotation.adverse_events:
+                matching_annotations.append(annotation)
+
+    # Apply search filter if provided
+    if search_query:
+        filtered_annotations = []
+        for annotation in matching_annotations:
+            if search_query.lower() in annotation.text.lower():
+                filtered_annotations.append(annotation)
+        matching_annotations = filtered_annotations
+
+    # Apply status filter
+    if status_filter == 'validated':
+        matching_annotations = [a for a in matching_annotations if a.is_validated]
+    elif status_filter == 'unvalidated':
+        matching_annotations = [a for a in matching_annotations if not a.is_validated]
+
+    # Sort by creation date (newest first)
+    matching_annotations.sort(key=lambda x: x.created_at, reverse=True)
+
+    # Pagination
+    paginator = Paginator(matching_annotations, 20)  # 20 examples per page
+    page_obj = paginator.get_page(page_number)
+
+    # Prepare examples with highlighted text
+    examples = []
+    for annotation in page_obj:
+        if entity_type in ['only_drug', 'only_adverse_event', 'mixed']:
+            # For single tag types, highlight all entities of the relevant type(s)
+            highlighted_text = annotation.text
+            if entity_type == 'only_drug':
+                # Highlight all drugs in the sentence
+                for drug in annotation.drugs:
+                    highlighted_text = highlight_entity_in_text(highlighted_text, drug)
+            elif entity_type == 'only_adverse_event':
+                # Highlight all adverse events in the sentence
+                for event in annotation.adverse_events:
+                    highlighted_text = highlight_entity_in_text(highlighted_text, event)
+            elif entity_type == 'mixed':
+                # Highlight both drugs and adverse events
+                for drug in annotation.drugs:
+                    highlighted_text = highlight_entity_in_text(highlighted_text, drug)
+                for event in annotation.adverse_events:
+                    highlighted_text = highlight_entity_in_text(highlighted_text, event)
+        else:
+            # For specific entity examples, highlight the specific entity
+            highlighted_text = highlight_entity_in_text(annotation.text, entity_name)
+
+        examples.append({
+            'id': annotation.id,
+            'text': annotation.text,
+            'highlighted_text': highlighted_text,
+            'is_validated': annotation.is_validated,
+            'created_at': annotation.created_at,
+        })
+
+    # Calculate statistics
+    total_count = len(matching_annotations)
+    validated_count = sum(1 for a in matching_annotations if a.is_validated)
+    unvalidated_count = total_count - validated_count
+
+    # Determine display names and entity name for context
+    if entity_type == 'only_drug':
+        entity_name_display = 'Only Drug Tags'
+        entity_type_display = 'Single Tag Type'
+        breadcrumb_name = 'Only Drug Examples'
+    elif entity_type == 'only_adverse_event':
+        entity_name_display = 'Only Adverse Event Tags'
+        entity_type_display = 'Single Tag Type'
+        breadcrumb_name = 'Only Adverse Event Examples'
+    elif entity_type == 'mixed':
+        entity_name_display = 'Mixed Tags'
+        entity_type_display = 'Single Tag Type'
+        breadcrumb_name = 'Mixed Tag Examples'
+    else:
+        entity_name_display = entity_name
+        entity_type_display = 'Drug' if entity_type == 'drug' else 'Adverse Event'
+        breadcrumb_name = f'{entity_type_display} Examples'
+
+    context = {
+        'entity_name': entity_name_display,
+        'entity_type': entity_type,
+        'entity_type_display': entity_type_display,
+        'breadcrumb_name': breadcrumb_name,
+        'examples': examples,
+        'page_obj': page_obj,
+        'total_count': total_count,
+        'validated_count': validated_count,
+        'unvalidated_count': unvalidated_count,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'has_search': bool(search_query),
+        'has_filter': status_filter != 'all',
+        'is_single_tag_type': entity_type in ['only_drug', 'only_adverse_event', 'mixed'],
+    }
+
+    return render(request, 'annotation/entity_examples.html', context)
+
+
 def annotation_changes(request, annotation_id=None):
     """View to display change history for annotations"""
     if annotation_id:
@@ -455,6 +783,46 @@ def annotation_changes(request, annotation_id=None):
         
         # Calculate text differences for this annotation
         text_with_changes = calculate_text_changes(annotation, changes)
+        
+        # Check if JSON format is requested
+        if request.GET.get('format') == 'json':
+            # Get change summary
+            change_summary = annotation.get_change_summary()
+            
+            # Prepare changes data for JSON
+            changes_data = []
+            for change in changes.order_by('-timestamp')[:10]:  # Limit to 10 most recent
+                changes_data.append({
+                    'change_type': change.change_type,
+                    'change_type_display': change.get_change_type_display(),
+                    'entity_name': change.entity_name,
+                    'field_name': change.field_name,
+                    'timestamp': change.timestamp.isoformat() if change.timestamp else None,
+                    'session_id': change.session_id,
+                })
+            
+            # Return JSON response
+            return JsonResponse({
+                'success': True,
+                'annotation': {
+                    'id': annotation.id,
+                    'text': annotation.text,
+                    'drugs': annotation.drugs,
+                    'adverse_events': annotation.adverse_events,
+                    'is_validated': annotation.is_validated,
+                },
+                'summary': {
+                    'total_changes': change_summary['total_changes'],
+                    'drug_additions': change_summary['drug_additions'],
+                    'drug_removals': change_summary['drug_removals'],
+                    'event_additions': change_summary['event_additions'],
+                    'event_removals': change_summary['event_removals'],
+                    'total_additions': change_summary['drug_additions'] + change_summary['event_additions'],
+                    'total_removals': change_summary['drug_removals'] + change_summary['event_removals'],
+                    'bulk_updates': changes.filter(change_type='bulk_update').count(),
+                },
+                'changes': changes_data,
+            })
         
         context = {
             'annotation': annotation,
@@ -610,3 +978,340 @@ def upload_ade_list(request):
         messages.success(request, f'ADE list uploaded! {added} new ADEs added.')
         return redirect('annotation_list')
     return render(request, 'annotation/upload_ades.html')
+
+def export_change_statistics(request):
+    """View to export change tracking statistics"""
+    try:
+        from django.db.models import Count, Q
+        
+        # Get overall change statistics
+        change_qs = AnnotationChange.objects.all()
+        total_changes = change_qs.count()
+        drug_additions = change_qs.filter(change_type='drug_added').count()
+        drug_removals = change_qs.filter(change_type='drug_removed').count()
+        event_additions = change_qs.filter(change_type='event_added').count()
+        event_removals = change_qs.filter(change_type='event_removed').count()
+        bulk_updates = change_qs.filter(change_type='bulk_update').count()
+        
+        # Get most active annotations
+        most_active_annotations = (
+            TextAnnotation.objects.annotate(num_changes=Count('changes'))
+            .filter(changes__isnull=False)
+            .order_by('-num_changes')[:20]
+        )
+        
+        # Get recent changes
+        recent_changes = AnnotationChange.objects.select_related('annotation').order_by('-timestamp')[:50]
+        
+        # Get change statistics by date
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Last 30 days of changes
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        recent_changes_30d = change_qs.filter(timestamp__gte=thirty_days_ago)
+        
+        # Last 7 days of changes
+        seven_days_ago = timezone.now() - timedelta(days=7)
+        recent_changes_7d = change_qs.filter(timestamp__gte=seven_days_ago)
+        
+        # Create statistics data
+        statistics_data = {
+            'export_timestamp': timezone.now().isoformat(),
+            'overall_statistics': {
+                'total_changes': total_changes,
+                'drug_additions': drug_additions,
+                'drug_removals': drug_removals,
+                'event_additions': event_additions,
+                'event_removals': event_removals,
+                'bulk_updates': bulk_updates,
+                'total_additions': drug_additions + event_additions,
+                'total_removals': drug_removals + event_removals,
+            },
+            'recent_activity': {
+                'changes_last_7_days': recent_changes_7d.count(),
+                'changes_last_30_days': recent_changes_30d.count(),
+            },
+            'most_active_annotations': [
+                {
+                    'annotation_id': ann.id,
+                    'text_preview': ann.text[:100] + '...' if len(ann.text) > 100 else ann.text,
+                    'total_changes': ann.num_changes,
+                    'drug_additions': ann.changes.filter(change_type='drug_added').count(),
+                    'drug_removals': ann.changes.filter(change_type='drug_removed').count(),
+                    'event_additions': ann.changes.filter(change_type='event_added').count(),
+                    'event_removals': ann.changes.filter(change_type='event_removed').count(),
+                    'last_modified': ann.changes.order_by('-timestamp').first().timestamp.isoformat() if ann.changes.exists() else None,
+                }
+                for ann in most_active_annotations
+            ],
+            'recent_changes': [
+                {
+                    'annotation_id': change.annotation.id,
+                    'change_type': change.change_type,
+                    'change_type_display': change.get_change_type_display(),
+                    'entity_name': change.entity_name,
+                    'field_name': change.field_name,
+                    'timestamp': change.timestamp.isoformat(),
+                    'session_id': change.session_id,
+                }
+                for change in recent_changes
+            ],
+            'change_type_breakdown': {
+                'drug_added': drug_additions,
+                'drug_removed': drug_removals,
+                'event_added': event_additions,
+                'event_removed': event_removals,
+                'bulk_update': bulk_updates,
+            }
+        }
+        
+        # Create response
+        response = HttpResponse(
+            json.dumps(statistics_data, ensure_ascii=False, indent=2),
+            content_type='application/json'
+        )
+        response['Content-Disposition'] = 'attachment; filename="change_tracking_statistics.json"'
+        
+        messages.success(request, f'Successfully exported change tracking statistics!')
+        return response
+        
+    except Exception as e:
+        messages.error(request, f'Error exporting change statistics: {str(e)}')
+        return redirect('annotation_stats')
+
+
+def upload_to_huggingface(request):
+    """View to upload dataset to Hugging Face Hub"""
+    if request.method == 'POST':
+        try:
+            # Get form data
+            hf_token = request.POST.get('hf_token')
+            dataset_name = request.POST.get('dataset_name')
+            dataset_description = request.POST.get('dataset_description', '')
+            is_private = request.POST.get('is_private') == 'on'
+            filter_type = request.POST.get('filter_type', 'all')
+            
+            if not hf_token:
+                messages.error(request, 'Hugging Face token is required!')
+                return redirect('annotation_stats')
+            
+            if not dataset_name:
+                messages.error(request, 'Dataset name is required!')
+                return redirect('annotation_stats')
+            
+            # Validate dataset name format
+            if not re.match(r'^[a-zA-Z0-9_-]+$', dataset_name):
+                messages.error(request, 'Dataset name can only contain letters, numbers, underscores, and hyphens!')
+                return redirect('annotation_stats')
+            
+            # Get annotations based on filter
+            if filter_type == 'annotated':
+                annotations = TextAnnotation.objects.filter(drugs__isnull=False, adverse_events__isnull=False).exclude(drugs=[], adverse_events=[])
+            elif filter_type == 'validated':
+                annotations = TextAnnotation.objects.filter(is_validated=True)
+            else:  # all
+                annotations = TextAnnotation.objects.all()
+            
+            # Prepare dataset data
+            dataset_data = []
+            for annotation in annotations:
+                data = {
+                    'id': annotation.id,
+                    'text': annotation.text,
+                    'drugs': annotation.drugs,
+                    'adverse_events': annotation.adverse_events,
+                    'is_validated': annotation.is_validated,
+                    'created_at': annotation.created_at.isoformat() if annotation.created_at else None,
+                    'updated_at': annotation.updated_at.isoformat() if annotation.updated_at else None,
+                }
+                dataset_data.append(data)
+            
+            # Create dataset info
+            dataset_info = {
+                'dataset_name': dataset_name,
+                'description': dataset_description or f'Medical text annotation dataset with {len(dataset_data)} examples',
+                'upload_timestamp': datetime.now().isoformat(),
+                'total_examples': len(dataset_data),
+                'filter_type': filter_type,
+                'is_private': is_private,
+                'validated_count': sum(1 for item in dataset_data if item['is_validated']),
+                'unvalidated_count': sum(1 for item in dataset_data if not item['is_validated']),
+            }
+            
+            # Prepare files for upload
+            files = {
+                'data.jsonl': ('data.jsonl', '\n'.join(json.dumps(item, ensure_ascii=False) for item in dataset_data), 'application/jsonl'),
+                'dataset_info.json': ('dataset_info.json', json.dumps(dataset_info, ensure_ascii=False, indent=2), 'application/json'),
+                'README.md': ('README.md', f'''# {dataset_name}
+
+{dataset_description or f'Medical text annotation dataset with {len(dataset_data)} examples'}
+
+## Dataset Information
+- **Total Examples**: {len(dataset_data)}
+- **Validated Examples**: {dataset_info['validated_count']}
+- **Unvalidated Examples**: {dataset_info['unvalidated_count']}
+- **Filter Type**: {filter_type}
+- **Privacy**: {'Private' if is_private else 'Public'}
+- **Upload Date**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+## Data Format
+Each example contains:
+- `id`: Annotation ID
+- `text`: Medical text content
+- `drugs`: List of identified drugs
+- `adverse_events`: List of identified adverse events
+- `is_validated`: Validation status
+- `created_at`: Creation timestamp
+- `updated_at`: Last update timestamp
+
+## Usage
+This dataset can be used for training medical text annotation models or for research in pharmacovigilance and medical text analysis.
+''', 'text/markdown')
+            }
+            
+            # First, try to get user info to validate token
+            try:
+                # Debug: Log the token (first few characters only)
+                token_preview = hf_token[:8] + "..." if len(hf_token) > 8 else hf_token
+                print(f"Attempting to validate token: {token_preview}")
+                
+                user_info_response = requests.get(
+                    'https://huggingface.co/api/whoami',
+                    headers={'Authorization': f'Bearer {hf_token}'},
+                    timeout=10
+                )
+                
+                print(f"Token validation response status: {user_info_response.status_code}")
+                print(f"Token validation response: {user_info_response.text[:200]}...")
+                
+                if user_info_response.status_code != 200:
+                    error_detail = user_info_response.text
+                    if '401' in str(user_info_response.status_code):
+                        messages.error(request, 'Invalid Hugging Face token. Please check your token and try again.')
+                    else:
+                        messages.error(request, f'Error validating token: {error_detail}')
+                    return redirect('annotation_stats')
+                
+                user_info = user_info_response.json()
+                username = user_info.get('name', '')
+                
+                print(f"Retrieved username: {username}")
+                
+                if not username:
+                    messages.error(request, 'Could not retrieve username from token. Please check your token.')
+                    return redirect('annotation_stats')
+                    
+            except requests.exceptions.RequestException as e:
+                print(f"Network error during token validation: {str(e)}")
+                messages.error(request, f'Network error while validating token: {str(e)}')
+                return redirect('annotation_stats')
+            
+            # Create dataset repository using the correct API endpoint
+            create_url = f'https://huggingface.co/api/repos/create'
+            create_data = {
+                'name': dataset_name,
+                'type': 'dataset',
+                'description': dataset_info['description'],
+                'private': is_private
+            }
+            
+            create_response = requests.post(
+                create_url, 
+                headers={'Authorization': f'Bearer {hf_token}'}, 
+                json=create_data
+            )
+            
+            if create_response.status_code not in [200, 201, 409]:  # 409 means already exists
+                error_msg = create_response.text
+                if 'already exists' in error_msg.lower():
+                    messages.error(request, f'Dataset "{dataset_name}" already exists. Please choose a different name.')
+                else:
+                    messages.error(request, f'Failed to create dataset repository: {error_msg}')
+                return redirect('annotation_stats')
+            
+            # Upload files using the datasets API
+            upload_url = f'https://huggingface.co/api/datasets/{username}/{dataset_name}/upload'
+            
+            # Prepare multipart form data
+            import io
+            from urllib.parse import urlencode
+            
+            # Create a custom multipart encoder
+            boundary = '----WebKitFormBoundary' + ''.join([str(ord(c)) for c in 'abcdefghijklmnop'])
+            
+            body = []
+            for field_name, (filename, content, content_type) in files.items():
+                body.append(f'--{boundary}'.encode())
+                body.append(f'Content-Disposition: form-data; name="{field_name}"; filename="{filename}"'.encode())
+                body.append(f'Content-Type: {content_type}'.encode())
+                body.append(b''.encode())
+                body.append(content.encode('utf-8'))
+                body.append(b'')
+            
+            body.append(f'--{boundary}--'.encode())
+            body.append(b'')
+            
+            upload_headers = {
+                'Authorization': f'Bearer {hf_token}',
+                'Content-Type': f'multipart/form-data; boundary={boundary}'
+            }
+            
+            upload_response = requests.post(
+                upload_url,
+                headers=upload_headers,
+                data=b'\r\n'.join(body)
+            )
+            
+            if upload_response.status_code in [200, 201]:
+                dataset_url = f'https://huggingface.co/datasets/{username}/{dataset_name}'
+                privacy_status = 'private' if is_private else 'public'
+                messages.success(request, f'Successfully uploaded {privacy_status} dataset to Hugging Face! View it at: {dataset_url}')
+            else:
+                messages.error(request, f'Failed to upload dataset: {upload_response.text}')
+            
+        except Exception as e:
+            messages.error(request, f'Error uploading to Hugging Face: {str(e)}')
+        
+        return redirect('annotation_stats')
+    
+    # GET request - show upload form
+    return render(request, 'annotation/upload_hf.html')
+
+
+def test_hf_token(request):
+    """Test endpoint to validate Hugging Face token"""
+    if request.method == 'POST':
+        hf_token = request.POST.get('hf_token')
+        if not hf_token:
+            return JsonResponse({'success': False, 'error': 'No token provided'})
+        
+        try:
+            # Test the token
+            response = requests.get(
+                'https://huggingface.co/api/whoami',
+                headers={'Authorization': f'Bearer {hf_token}'},
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                user_info = response.json()
+                username = user_info.get('name', '')
+                return JsonResponse({
+                    'success': True, 
+                    'username': username,
+                    'message': f'Token is valid for user: {username}'
+                })
+            else:
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'Token validation failed: {response.status_code} - {response.text}'
+                })
+                
+        except Exception as e:
+            return JsonResponse({
+                'success': False, 
+                'error': f'Error testing token: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'error': 'POST method required'})

@@ -1,0 +1,661 @@
+{% extends 'annotation/base.html' %}
+
+{% block title %}Upload to Hugging Face - Medical Data Annotation Tool{% endblock %}
+
+{% block content %}
+<div class="upload-hf-page">
+    <!-- Header Section -->
+    <div class="upload-hf-header">
+        <div class="header-content">
+            <div class="header-icon">
+                <i class="fab fa-huggingface"></i>
+            </div>
+            <div class="header-text">
+                <h1>Upload to Hugging Face</h1>
+                <p>Share your medical annotation dataset with the AI community</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Form Section -->
+    <div class="upload-hf-section">
+        <div class="section-header">
+            <h2><i class="fas fa-cloud-upload-alt"></i> Dataset Configuration</h2>
+            <p>Configure your dataset and upload it to Hugging Face Hub</p>
+        </div>
+
+        <form method="POST" class="upload-hf-form">
+            {% csrf_token %}
+            
+            <!-- Hugging Face Token -->
+            <div class="form-group">
+                <label for="hf_token" class="form-label">
+                    <i class="fas fa-key"></i> Hugging Face Token *
+                </label>
+                <div class="token-input-group">
+                    <input type="password" 
+                           class="form-control token-input" 
+                           id="hf_token" 
+                           name="hf_token" 
+                           placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                           required>
+                    <button type="button" class="toggle-password" onclick="togglePassword()">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="form-help">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Get your token from <a href="https://huggingface.co/settings/tokens" target="_blank">Hugging Face Settings</a></span>
+                    <button type="button" class="btn btn-sm btn-outline-info ms-2" onclick="testToken()">
+                        <i class="fas fa-check"></i> Test Token
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dataset Name -->
+            <div class="form-group">
+                <label for="dataset_name" class="form-label">
+                    <i class="fas fa-tag"></i> Dataset Name *
+                </label>
+                <input type="text" 
+                       class="form-control" 
+                       id="dataset_name" 
+                       name="dataset_name" 
+                       placeholder="medical-annotations-2024"
+                       pattern="[a-zA-Z0-9_-]+"
+                       required>
+                <div class="form-help">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Only letters, numbers, underscores, and hyphens allowed</span>
+                </div>
+            </div>
+
+            <!-- Dataset Description -->
+            <div class="form-group">
+                <label for="dataset_description" class="form-label">
+                    <i class="fas fa-align-left"></i> Dataset Description
+                </label>
+                <textarea class="form-control" 
+                          id="dataset_description" 
+                          name="dataset_description" 
+                          rows="4"
+                          placeholder="Describe your dataset, its purpose, and any important details..."></textarea>
+            </div>
+
+            <!-- Dataset Filter -->
+            <div class="form-group">
+                <label for="filter_type" class="form-label">
+                    <i class="fas fa-filter"></i> Data Filter
+                </label>
+                <select class="form-control" id="filter_type" name="filter_type">
+                    <option value="all">All Annotations</option>
+                    <option value="annotated">Annotated Only (has drugs or events)</option>
+                    <option value="validated">Validated Only</option>
+                </select>
+                <div class="form-help">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Choose which annotations to include in the dataset</span>
+                </div>
+            </div>
+
+            <!-- Private Dataset Option -->
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="is_private" name="is_private" class="checkbox-input">
+                        <span class="checkmark"></span>
+                        <div class="checkbox-content">
+                            <h4>Make Dataset Private</h4>
+                            <p>Keep your dataset private and only accessible to you</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="{% url 'annotation_stats' %}" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Cancel</span>
+                </a>
+                <button type="submit" class="btn-primary">
+                    <i class="fab fa-huggingface"></i>
+                    <span>Upload to Hugging Face</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Information Section -->
+    <div class="info-section">
+        <div class="info-card">
+            <div class="info-header">
+                <i class="fas fa-lightbulb"></i>
+                <h3>What will be uploaded?</h3>
+            </div>
+            <div class="info-content">
+                <ul>
+                    <li><strong>data.jsonl</strong> - Your annotation data in JSONL format</li>
+                    <li><strong>dataset_info.json</strong> - Metadata about the dataset</li>
+                    <li><strong>README.md</strong> - Documentation for the dataset</li>
+                    <li><strong>Privacy settings</strong> - Public or private dataset option</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-header">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Privacy & Security</h3>
+            </div>
+            <div class="info-content">
+                <ul>
+                    <li>Your Hugging Face token is only used for this upload</li>
+                    <li>Datasets are public by default (can be made private)</li>
+                    <li>Private datasets are only accessible to you</li>
+                    <li>No sensitive data is stored on our servers</li>
+                    <li>You can delete the dataset from Hugging Face anytime</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Upload HF Page Layout */
+.upload-hf-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header Section */
+.upload-hf-header {
+    background: linear-gradient(135deg, var(--primary-800) 0%, var(--primary-900) 100%);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: var(--shadow-2xl);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.header-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+}
+
+.header-text h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.025em;
+    color: white;
+}
+
+.header-text p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+    color: white;
+}
+
+/* Upload Section */
+.upload-hf-section {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--primary-700);
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.section-header p {
+    color: var(--gray-600);
+    margin: 0;
+}
+
+/* Form Styling */
+.upload-hf-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--primary-700);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-control {
+    border: 2px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.form-control:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Token Input Group */
+.token-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.token-input {
+    padding-right: 3rem;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.toggle-password:hover {
+    background: var(--gray-100);
+    color: var(--gray-700);
+}
+
+/* Form Help */
+.form-help {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-600);
+}
+
+.form-help a {
+    color: var(--accent-blue);
+    text-decoration: none;
+}
+
+.form-help a:hover {
+    text-decoration: underline;
+}
+
+/* Checkbox Styling */
+.checkbox-group {
+    margin-top: 0.5rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    cursor: pointer;
+    padding: 1rem;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    border: 2px solid var(--gray-200);
+}
+
+.checkbox-label:hover {
+    border-color: var(--accent-blue);
+    background: var(--primary-50);
+}
+
+.checkbox-input {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--gray-300);
+    border-radius: 4px;
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.checkbox-input:checked + .checkmark {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.checkbox-input:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.checkbox-content h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+}
+
+.checkbox-content p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.btn-primary, .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #f7931e 0%, #ff6b35 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
+}
+
+.btn-secondary {
+    background: var(--gray-100);
+    color: var(--gray-700);
+    border: 1px solid var(--gray-200);
+}
+
+.btn-secondary:hover {
+    background: var(--gray-200);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Info Section */
+.info-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.info-header i {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-blue-dark) 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.info-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-700);
+    margin: 0;
+}
+
+.info-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-content li {
+    padding: 0.5rem 0;
+    color: var(--primary-600);
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.info-content li:last-child {
+    border-bottom: none;
+}
+
+.info-content strong {
+    color: var(--primary-700);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .upload-hf-page {
+        padding: 1rem;
+    }
+    
+    .upload-hf-header {
+        padding: 2rem 1rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .header-text h1 {
+        font-size: 2rem;
+    }
+    
+    .upload-hf-section {
+        padding: 1.5rem;
+    }
+    
+    .info-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById('hf_token');
+    const button = document.querySelector('.toggle-password i');
+    
+    if (!input || !button) {
+        console.error('Could not find token input or toggle button');
+        return;
+    }
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        button.className = 'fas fa-eye-slash';
+        button.title = 'Hide token';
+    } else {
+        input.type = 'password';
+        button.className = 'fas fa-eye';
+        button.title = 'Show token';
+    }
+}
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.upload-hf-form');
+    const datasetNameInput = document.getElementById('dataset_name');
+    
+    // Real-time validation for dataset name
+    datasetNameInput.addEventListener('input', function() {
+        const value = this.value;
+        const isValid = /^[a-zA-Z0-9_-]*$/.test(value);
+        
+        if (isValid) {
+            this.style.borderColor = '#e5e7eb'; // gray-200
+        } else {
+            this.style.borderColor = '#ef4444'; // danger-500
+        }
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        const token = document.getElementById('hf_token').value;
+        const datasetName = document.getElementById('dataset_name').value;
+        
+        if (!token) {
+            e.preventDefault();
+            alert('Please enter your Hugging Face token');
+            return;
+        }
+        
+        if (!datasetName) {
+            e.preventDefault();
+            alert('Please enter a dataset name');
+            return;
+        }
+        
+        if (!/^[a-zA-Z0-9_-]+$/.test(datasetName)) {
+            e.preventDefault();
+            alert('Dataset name can only contain letters, numbers, underscores, and hyphens');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = document.querySelector('.btn-primary');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Uploading...</span>';
+        submitBtn.disabled = true;
+    });
+});
+
+// Test token function
+function testToken() {
+    const token = document.getElementById('hf_token').value;
+    if (!token) {
+        alert('Please enter your Hugging Face token first');
+        return;
+    }
+    
+    const testBtn = document.querySelector('button[onclick="testToken()"]');
+    const originalText = testBtn.innerHTML;
+    testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    testBtn.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('hf_token', token);
+    
+    fetch('/annotation/test-hf-token/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ Token is valid!\nUsername: ${data.username}\n${data.message}`);
+        } else {
+            alert(`❌ Token validation failed:\n${data.error}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error testing token:', error);
+        alert('❌ Error testing token. Please check your connection and try again.');
+    })
+    .finally(() => {
+        testBtn.innerHTML = originalText;
+        testBtn.disabled = false;
+    });
+}
+</script>
+{% endblock %} 

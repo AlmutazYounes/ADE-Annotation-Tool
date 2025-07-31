@@ -107,6 +107,19 @@ class AnnotationChange(models.Model):
             entity_name=entity_name,
             session_id=session_id
         )
+    
+    @classmethod
+    def log_bulk_update(cls, annotation, field_name, old_value, new_value, session_id=None):
+        """Log a bulk update change"""
+        return cls.objects.create(
+            annotation=annotation,
+            change_type='bulk_update',
+            field_name=field_name,
+            old_value=old_value,
+            new_value=new_value,
+            entity_name=None,  # Bulk updates don't have a specific entity
+            session_id=session_id
+        )
 
 
 class DrugListEntry(models.Model):

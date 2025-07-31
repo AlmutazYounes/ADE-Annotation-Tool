@@ -1,410 +1,1178 @@
 {% extends 'annotation/base.html' %}
 
-{% block title %}Statistics - Medical Data Annotation Tool{% endblock %}
+{% block title %}Analytics Dashboard - Medical Data Annotation Tool{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1><i class="fas fa-chart-bar"></i> Annotation Statistics</h1>
-            <a href="{% url 'annotation_list' %}" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Back to Annotations
-            </a>
-        </div>
+<div class="analytics-dashboard">
 
-        <!-- Overview Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center bg-primary text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-database"></i></h2>
-                        <h3>{{ total_annotations }}</h3>
-                        <p class="mb-0">Total Annotations</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center bg-success text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-check-circle"></i></h2>
-                        <h3>{{ validated_annotations }}</h3>
-                        <p class="mb-0">Validated</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center bg-info text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-pills"></i></h2>
-                        <h3>{{ total_unique_drugs }}</h3>
-                        <p class="mb-0">Unique Drugs</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-center bg-warning text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-exclamation-triangle"></i></h2>
-                        <h3>{{ total_unique_events }}</h3>
-                        <p class="mb-0">Unique Adverse Events</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Change Statistics Overview -->
-        <div class="row mb-4">
-            <div class="col-md-2">
-                <div class="card text-center bg-dark text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-random"></i></h2>
-                        <h3>{{ total_changes }}</h3>
-                        <p class="mb-0">Total Changes</p>
-                    </div>
-                </div>
+    <!-- Header Section -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="dashboard-title">
+                    <i class="fas fa-chart-line"></i>
+                    Analytics Dashboard
+                </h1>
+                <p class="dashboard-subtitle">Comprehensive insights into your annotation progress and data quality</p>
             </div>
-            <div class="col-md-2">
-                <div class="card text-center bg-success text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-plus-circle"></i></h2>
-                        <h3>{{ drug_additions }}</h3>
-                        <p class="mb-0">Drug Additions</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-center bg-danger text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-minus-circle"></i></h2>
-                        <h3>{{ drug_removals }}</h3>
-                        <p class="mb-0">Drug Removals</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-center bg-warning text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-plus-square"></i></h2>
-                        <h3>{{ event_additions }}</h3>
-                        <p class="mb-0">ADE Additions</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-center bg-danger text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-minus-square"></i></h2>
-                        <h3>{{ event_removals }}</h3>
-                        <p class="mb-0">ADE Removals</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card text-center bg-secondary text-white">
-                    <div class="card-body">
-                        <h2><i class="fas fa-layer-group"></i></h2>
-                        <h3>{{ bulk_updates }}</h3>
-                        <p class="mb-0">Bulk Updates</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5><i class="fas fa-tasks"></i> Validation Progress</h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Validation Progress</span>
-                    <span>{{ validation_percentage|floatformat:1 }}%</span>
-                </div>
-                <div class="progress">
-                    <div class="progress-bar bg-success" role="progressbar" 
-                         style="width: {{ validation_percentage }}%"
-                         aria-valuenow="{{ validation_percentage }}" 
-                         aria-valuemin="0" aria-valuemax="100">
-                    </div>
-                </div>
-                <small class="text-muted">
-                    {{ validated_annotations }} of {{ total_annotations }} annotations have been validated
-                </small>
-            </div>
-        </div>
-
-        <div class="row">
-            <!-- Top Drugs -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5><i class="fas fa-pills"></i> Most Frequent Drugs</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if top_drugs %}
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Drug Name</th>
-                                            <th>Frequency</th>
-                                            <th>Percentage</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for drug, count in top_drugs %}
-                                            <tr>
-                                                <td>{{ forloop.counter }}</td>
-                                                <td>
-                                                    <span class="entity-tag drug-tag">{{ drug }}</span>
-                                                </td>
-                                                <td>{{ count }}</td>
-                                                <td>
-                                                    {% widthratio count total_annotations 100 %}%
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            <!-- Drug Frequency Chart -->
-                            <div class="mt-3">
-                                <h6>Distribution Chart</h6>
-                                {% for drug, count in top_drugs %}
-                                    <div class="mb-2">
-                                        <div class="d-flex justify-content-between">
-                                            <small>{{ drug|truncatechars:20 }}</small>
-                                            <small>{{ count }}</small>
-                                        </div>
-                                        <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-success" 
-                                                 style="width: {% widthratio count top_drugs.0.1 100 %}%">
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center text-muted">
-                                <i class="fas fa-pills fa-3x mb-3"></i>
-                                <p>No drugs have been annotated yet.</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Top Adverse Events -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-danger text-white">
-                        <h5><i class="fas fa-exclamation-triangle"></i> Most Frequent Adverse Events</h5>
-                    </div>
-                    <div class="card-body">
-                        {% if top_events %}
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Event Name</th>
-                                            <th>Frequency</th>
-                                            <th>Percentage</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for event, count in top_events %}
-                                            <tr>
-                                                <td>{{ forloop.counter }}</td>
-                                                <td>
-                                                    <span class="entity-tag adverse-event-tag">{{ event|truncatechars:30 }}</span>
-                                                </td>
-                                                <td>{{ count }}</td>
-                                                <td>
-                                                    {% widthratio count total_annotations 100 %}%
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            <!-- Event Frequency Chart -->
-                            <div class="mt-3">
-                                <h6>Distribution Chart</h6>
-                                {% for event, count in top_events %}
-                                    <div class="mb-2">
-                                        <div class="d-flex justify-content-between">
-                                            <small>{{ event|truncatechars:20 }}</small>
-                                            <small>{{ count }}</small>
-                                        </div>
-                                        <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar bg-danger" 
-                                                 style="width: {% widthratio count top_events.0.1 100 %}%">
-                                            </div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center text-muted">
-                                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                                <p>No adverse events have been annotated yet.</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Most Active Annotations Table -->
-        <div class="card mb-4">
-            <div class="card-header bg-info text-white">
-                <h5><i class="fas fa-fire"></i> Most Active Annotations</h5>
-            </div>
-            <div class="card-body">
-                {% if most_active_annotations %}
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Annotation ID</th>
-                                    <th>Text Preview</th>
-                                    <th>Number of Changes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for annotation in most_active_annotations %}
-                                    <tr>
-                                        <td><a href="{% url 'annotation_changes_specific' annotation.id %}">#{{ annotation.id }}</a></td>
-                                        <td>{{ annotation.text|truncatechars:40 }}</td>
-                                        <td>{{ annotation.num_changes }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="text-center text-muted">
-                        <i class="fas fa-fire fa-2x mb-2"></i>
-                        <p>No annotation changes yet.</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Recent Changes Table -->
-        <div class="card mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5><i class="fas fa-history"></i> Recent Changes</h5>
-            </div>
-            <div class="card-body">
-                {% if recent_changes %}
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Annotation ID</th>
-                                    <th>Type</th>
-                                    <th>Entity</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for change in recent_changes %}
-                                    <tr>
-                                        <td>{{ change.timestamp|date:"Y-m-d H:i" }}</td>
-                                        <td><a href="{% url 'annotation_changes_specific' change.annotation.id %}">#{{ change.annotation.id }}</a></td>
-                                        <td>{{ change.get_change_type_display }}</td>
-                                        <td>{{ change.entity_name|default:"-" }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="text-center text-muted">
-                        <i class="fas fa-history fa-2x mb-2"></i>
-                        <p>No recent changes yet.</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Summary Card -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5><i class="fas fa-info-circle"></i> Summary</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Annotation Status</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-check text-success"></i> Validated: {{ validated_annotations }} annotations</li>
-                            <li><i class="fas fa-clock text-warning"></i> Pending: {{ total_annotations|add:"-"|add:validated_annotations }} annotations</li>
-                            <li><i class="fas fa-percentage text-info"></i> Completion: {{ validation_percentage|floatformat:1 }}%</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Entity Statistics</h6>
-                        <ul class="list-unstyled">
-                            <li><i class="fas fa-pills text-success"></i> Unique drugs: {{ total_unique_drugs }}</li>
-                            <li><i class="fas fa-exclamation-triangle text-danger"></i> Unique adverse events: {{ total_unique_events }}</li>
-                            <li><i class="fas fa-database text-info"></i> Total entities: {{ total_unique_drugs|add:total_unique_events }}</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                {% if total_annotations > 0 %}
-                    <div class="alert alert-info mt-3">
-                        <h6><i class="fas fa-lightbulb"></i> Quick Actions</h6>
-                        <p class="mb-2">Based on your current data:</p>
-                        <div class="btn-group" role="group">
-                            {% if validated_annotations < total_annotations %}
-                                <a href="{% url 'annotation_list' %}?status=unvalidated" class="btn btn-sm btn-outline-warning">
-                                    <i class="fas fa-clock"></i> Review Unvalidated ({{ total_annotations|add:"-"|add:validated_annotations }})
-                                </a>
-                            {% endif %}
-                            <div class="btn-group" role="group">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-download"></i> Export
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><h6 class="dropdown-header">Export Options</h6></li>
-                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=annotated">
-                                            <i class="fas fa-tags text-success"></i> Annotated Only ({{ total_annotations|add:"-"|add:validated_annotations }} texts)
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=validated">
-                                            <i class="fas fa-check-circle text-primary"></i> Validated Only ({{ validated_annotations }} texts)
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=annotated_validated">
-                                            <i class="fas fa-certificate text-warning"></i> Annotated & Validated
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=modified">
-                                            <i class="fas fa-edit text-info"></i> Modified Only
-                                        </a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=all">
-                                            <i class="fas fa-download text-muted"></i> All Texts ({{ total_annotations }})
-                                        </a></li>
-                                    </ul>
-                                </div>
-                                <a href="{% url 'export_entities_jsonl' %}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-code"></i> Export Entities
-                                </a>
-                            </div>
-                            <a href="{% url 'import_jsonl' %}" class="btn btn-sm btn-outline-success">
-                                <i class="fas fa-upload"></i> Import More Data
-                            </a>
-                        </div>
-                    </div>
-                {% endif %}
+            <div class="header-actions">
+                <a href="{% url 'annotation_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left"></i> Back to Annotations
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-download"></i> Export Report
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- Key Metrics Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card primary-gradient">
+            <div class="metric-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">{{ total_annotations }}</h3>
+                <p class="metric-label">Total Annotations</p>
+                <div class="metric-trend">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>All time</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card success-gradient">
+            <div class="metric-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">{{ validated_annotations }}</h3>
+                <p class="metric-label">Validated</p>
+                <div class="metric-trend">
+                    <i class="fas fa-percentage"></i>
+                    <span>{{ validation_percentage|floatformat:1 }}% complete</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card info-gradient">
+            <div class="metric-icon">
+                <i class="fas fa-pills"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">{{ total_unique_drugs }}</h3>
+                <p class="metric-label">Unique Drugs</p>
+                <div class="metric-trend">
+                    <i class="fas fa-tags"></i>
+                    <span>{{ total_drugs }} total mentions</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card warning-gradient">
+            <div class="metric-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value">{{ total_unique_events }}</h3>
+                <p class="metric-label">Unique Adverse Events</p>
+                <div class="metric-trend">
+                    <i class="fas fa-tags"></i>
+                    <span>{{ total_events }} total mentions</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="progress-section">
+        <div class="progress-card">
+            <div class="progress-header">
+                <h3><i class="fas fa-tasks"></i> Validation Progress</h3>
+                <div class="progress-stats">
+                    <span class="stat-item">
+                        <strong>{{ validated_annotations }}</strong> validated
+                    </span>
+                    <span class="stat-item">
+                        <strong>{{ total_annotations|add:"-"|add:validated_annotations }}</strong> pending
+                    </span>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ validation_percentage }}%"></div>
+                </div>
+                <div class="progress-label">{{ validation_percentage|floatformat:1 }}% Complete</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <div class="chart-row">
+            <!-- Top Drugs Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fas fa-pills"></i> Most Frequent Drugs</h3>
+                    <div class="chart-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="toggleChartView('drugs')">
+                            <i class="fas fa-chart-bar"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-content" id="drugs-chart">
+                    {% if top_drugs %}
+                        <div class="chart-bars">
+                            {% for drug, count in top_drugs %}
+                                <div class="chart-bar-item">
+                                    <div class="bar-label">
+                                        <span class="entity-name">{{ drug|truncatechars:25 }}</span>
+                                        <span class="bar-count">{{ count }}</span>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill" style="width: {% widthratio count top_drugs.0.1 100 %}%"></div>
+                                    </div>
+                                    <a href="{% url 'entity_examples_page' %}?entity={{ drug|urlencode }}&type=drug" 
+                                       class="bar-link">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-pills"></i>
+                            <p>No drugs have been annotated yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Top Events Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Most Frequent Adverse Events</h3>
+                    <div class="chart-actions">
+                        <button class="btn btn-sm btn-outline-danger" onclick="toggleChartView('events')">
+                            <i class="fas fa-chart-bar"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-content" id="events-chart">
+                    {% if top_events %}
+                        <div class="chart-bars">
+                            {% for event, count in top_events %}
+                                <div class="chart-bar-item">
+                                    <div class="bar-label">
+                                        <span class="entity-name">{{ event|truncatechars:25 }}</span>
+                                        <span class="bar-count">{{ count }}</span>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill danger" style="width: {% widthratio count top_events.0.1 100 %}%"></div>
+                                    </div>
+                                    <a href="{% url 'entity_examples_page' %}?entity={{ event|urlencode }}&type=adverse_event" 
+                                       class="bar-link">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>No adverse events have been annotated yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analysis Cards -->
+    <div class="analysis-section">
+        <div class="analysis-grid">
+            <!-- Tag Type Analysis -->
+            <div class="analysis-card">
+                <div class="analysis-header">
+                    <h3><i class="fas fa-filter"></i> Tag Type Distribution</h3>
+                    <p>Analysis of annotation patterns</p>
+                </div>
+                <div class="analysis-content">
+                    <div class="analysis-item">
+                        <div class="analysis-icon drug">
+                            <i class="fas fa-pills"></i>
+                        </div>
+                        <div class="analysis-details">
+                            <h4>{{ only_drug_count }}</h4>
+                            <p>Only Drug Tags</p>
+                            <small>Sentences with drug entities only</small>
+                        </div>
+                        <a href="{% url 'entity_examples_page' %}?type=only_drug" class="analysis-link">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                    
+                    <div class="analysis-item">
+                        <div class="analysis-icon event">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="analysis-details">
+                            <h4>{{ only_adverse_event_count }}</h4>
+                            <p>Only Adverse Event Tags</p>
+                            <small>Sentences with event entities only</small>
+                        </div>
+                        <a href="{% url 'entity_examples_page' %}?type=only_adverse_event" class="analysis-link">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                    
+                    <div class="analysis-item">
+                        <div class="analysis-icon mixed">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="analysis-details">
+                            <h4>{{ mixed_count }}</h4>
+                            <p>Mixed Tags</p>
+                            <small>Sentences with both entity types</small>
+                        </div>
+                        <a href="{% url 'entity_examples_page' %}?type=mixed" class="analysis-link">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Change Tracking -->
+            <div class="analysis-card">
+                <div class="analysis-header">
+                    <h3><i class="fas fa-history"></i> Change Tracking</h3>
+                    <p>Annotation modification history</p>
+                </div>
+                <div class="analysis-content">
+                    <div class="change-stats">
+                        <div class="change-item">
+                            <div class="change-icon add">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="change-details">
+                                <h4>{{ drug_additions|add:event_additions }}</h4>
+                                <p>Total Additions</p>
+                            </div>
+                        </div>
+                        
+                        <div class="change-item">
+                            <div class="change-icon remove">
+                                <i class="fas fa-minus"></i>
+                            </div>
+                            <div class="change-details">
+                                <h4>{{ drug_removals|add:event_removals }}</h4>
+                                <p>Total Removals</p>
+                            </div>
+                        </div>
+                        
+                        <div class="change-item">
+                            <div class="change-icon bulk">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div class="change-details">
+                                <h4>{{ bulk_updates }}</h4>
+                                <p>Bulk Updates</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
 </div>
-{% endblock %} 
+
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Analytics Dashboard Styles */
+.analytics-dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header Section */
+.dashboard-header {
+    background: linear-gradient(135deg, var(--primary-800) 0%, var(--primary-900) 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: var(--shadow-2xl);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+}
+
+.dashboard-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+}
+
+.metric-card.primary-gradient::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-blue-dark)); }
+.metric-card.success-gradient::before { background: linear-gradient(90deg, var(--success-500), var(--success-600)); }
+.metric-card.info-gradient::before { background: linear-gradient(90deg, var(--medical-drug), var(--medical-drug-dark)); }
+.metric-card.warning-gradient::before { background: linear-gradient(90deg, var(--warning-500), var(--warning-600)); }
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.metric-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.primary-gradient .metric-icon { background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-dark)); }
+.success-gradient .metric-icon { background: linear-gradient(135deg, var(--success-500), var(--success-600)); }
+.info-gradient .metric-icon { background: linear-gradient(135deg, var(--medical-drug), var(--medical-drug-dark)); }
+.warning-gradient .metric-icon { background: linear-gradient(135deg, var(--warning-500), var(--warning-600)); }
+
+.metric-content {
+    flex: 1;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--gray-900);
+}
+
+.metric-label {
+    font-size: 1rem;
+    color: var(--gray-800);
+    margin: 0.25rem 0;
+    font-weight: 500;
+}
+
+.metric-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-700);
+}
+
+/* Progress Section */
+.progress-section {
+    margin-bottom: 2rem;
+}
+
+.progress-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.progress-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gray-900);
+}
+
+.progress-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    color: var(--gray-800);
+}
+
+.stat-item strong {
+    display: block;
+    font-size: 1.25rem;
+    color: var(--gray-800);
+}
+
+.progress-bar-container {
+    position: relative;
+}
+
+.progress-bar {
+    height: 12px;
+    background: var(--gray-200);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success-500), var(--success-600));
+    border-radius: 6px;
+    transition: width 0.5s ease;
+}
+
+.progress-label {
+    text-align: center;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
+/* Charts Section */
+.charts-section {
+    margin-bottom: 2rem;
+}
+
+.chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 1.5rem;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-700);
+}
+
+.chart-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.chart-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.chart-bar-item:hover {
+    background: var(--gray-50);
+}
+
+.bar-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-width: 200px;
+    flex: 1;
+}
+
+.entity-name {
+    font-weight: 500;
+    color: var(--gray-900);
+}
+
+.bar-count {
+    font-weight: 600;
+    color: var(--gray-800);
+    background: var(--gray-100);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.bar-container {
+    flex: 2;
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--success-500), var(--success-600));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.bar-fill.danger {
+    background: linear-gradient(90deg, var(--danger-500), var(--danger-600));
+}
+
+.bar-link {
+    color: var(--gray-600);
+    transition: color 0.2s ease;
+}
+
+.bar-link:hover {
+    color: var(--primary-600);
+}
+
+/* Analysis Section */
+.analysis-section {
+    margin-bottom: 2rem;
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.analysis-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-header {
+    margin-bottom: 1.5rem;
+}
+
+.analysis-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-700);
+}
+
+.analysis-header p {
+    margin: 0;
+    color: var(--gray-800);
+}
+
+.analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.analysis-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.analysis-item:hover {
+    background: var(--gray-50);
+}
+
+.analysis-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.analysis-icon.drug { background: linear-gradient(135deg, var(--medical-drug), var(--medical-drug-dark)); }
+.analysis-icon.event { background: linear-gradient(135deg, var(--medical-red), var(--medical-red-dark)); }
+.analysis-icon.mixed { background: linear-gradient(135deg, var(--success-500), var(--success-600)); }
+
+.analysis-details {
+    flex: 1;
+}
+
+.analysis-details h4 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.analysis-details p {
+    margin: 0.25rem 0;
+    font-weight: 500;
+    color: var(--gray-800);
+}
+
+.analysis-details small {
+    color: var(--gray-700);
+    font-size: 0.875rem;
+}
+
+.analysis-link {
+    color: var(--gray-600);
+    transition: color 0.2s ease;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.analysis-link:hover {
+    color: var(--primary-600);
+    background: var(--primary-50);
+}
+
+/* Change Stats */
+.change-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.change-item {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.change-item:hover {
+    background: var(--gray-50);
+}
+
+.change-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.5rem;
+    font-size: 1rem;
+    color: white;
+}
+
+.change-icon.add { background: linear-gradient(135deg, var(--success-500), var(--success-600)); }
+.change-icon.remove { background: linear-gradient(135deg, var(--danger-500), var(--danger-600)); }
+.change-icon.bulk { background: linear-gradient(135deg, var(--warning-500), var(--warning-600)); }
+
+.change-details h4 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-900);
+}
+
+.change-details p {
+    margin: 0.25rem 0 0 0;
+    color: var(--gray-800);
+    font-size: 0.875rem;
+}
+
+
+
+/* Actions Section */
+.actions-section {
+    margin-bottom: 2rem;
+}
+
+.actions-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.actions-header {
+    margin-bottom: 1.5rem;
+}
+
+.actions-header h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-700);
+}
+
+.actions-header p {
+    margin: 0;
+    color: var(--gray-800);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.75rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.action-btn:hover::before {
+    left: 100%;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.primary:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(16, 185, 129, 0.3);
+}
+
+.action-btn.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(245, 158, 11, 0.3);
+}
+
+.action-btn.info {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.info:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(6, 182, 212, 0.3);
+}
+
+.action-btn.danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(239, 68, 68, 0.3);
+}
+
+.action-btn.secondary {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn.secondary:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(107, 114, 128, 0.3);
+}
+
+.action-btn:hover {
+    color: white;
+    text-decoration: none;
+}
+
+.action-btn:active {
+    transform: translateY(-1px);
+    transition: transform 0.1s ease;
+}
+
+/* Dropdown Menu Styling */
+.dropdown-menu {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+    background: white;
+    backdrop-filter: blur(10px);
+}
+
+.dropdown-header {
+    font-weight: 600;
+    color: var(--gray-700);
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    color: var(--gray-700);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dropdown-item:hover {
+    background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
+    color: var(--primary-800);
+    transform: translateX(4px);
+}
+
+.dropdown-item i {
+    width: 16px;
+    text-align: center;
+    color: var(--gray-500);
+}
+
+.dropdown-item:hover i {
+    color: var(--primary-600);
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-color: var(--gray-200);
+}
+
+/* Empty States */
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--gray-500);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Small Button Styling */
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-sm.btn-outline-primary {
+    border: 2px solid var(--accent-blue);
+    color: var(--accent-blue);
+    background: transparent;
+}
+
+.btn-sm.btn-outline-primary:hover {
+    background: var(--accent-blue);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-sm.btn-outline-danger {
+    border: 2px solid var(--danger-500);
+    color: var(--danger-500);
+    background: transparent;
+}
+
+.btn-sm.btn-outline-danger:hover {
+    background: var(--danger-500);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* Header Button Styling */
+.header-actions .btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header-actions .btn-outline-primary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.header-actions .btn-outline-primary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.header-actions .btn-primary {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.header-actions .btn-primary:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .analytics-dashboard {
+        padding: 1rem;
+    }
+    
+    .dashboard-title {
+        font-size: 2rem;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .metric-card {
+        padding: 1.5rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .metric-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+    }
+    
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-btn {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 1024px) {
+    .metrics-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
+    }
+    
+    .metric-card {
+        padding: 1.75rem;
+    }
+    
+    .chart-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .analysis-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+    
+    .activity-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .header-actions,
+    .chart-actions,
+    .analysis-link,
+    .activity-link,
+    .action-buttons {
+        display: none !important;
+    }
+    
+    .analytics-dashboard {
+        padding: 0;
+    }
+    
+    .metric-card,
+    .progress-card,
+    .chart-card,
+    .analysis-card,
+    .activity-card,
+    .actions-card {
+        box-shadow: none;
+        border: 1px solid var(--gray-200);
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle chart view functionality
+function toggleChartView(type) {
+    const chartContent = document.getElementById(type + '-chart');
+    // Add animation or view switching logic here
+    console.log('Toggle chart view for:', type);
+}
+
+
+
+// Add smooth animations for metric cards
+document.addEventListener('DOMContentLoaded', function() {
+    const metricCards = document.querySelectorAll('.metric-card');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    });
+    
+    metricCards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'all 0.6s ease';
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %}

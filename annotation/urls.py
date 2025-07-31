@@ -8,9 +8,11 @@ urlpatterns = [
     path('import/', views.import_jsonl, name='import_jsonl'),
     path('export/', views.export_jsonl, name='export_jsonl'),
     path('export-entities/', views.export_entities_jsonl, name='export_entities_jsonl'),
+    path('upload-hf/', views.upload_to_huggingface, name='upload_to_huggingface'),
+    path('test-hf-token/', views.test_hf_token, name='test_hf_token'),
     path('stats/', views.annotation_stats, name='annotation_stats'),
-    path('changes/', views.annotation_changes, name='annotation_changes'),
-    path('changes/<int:annotation_id>/', views.annotation_changes, name='annotation_changes_specific'),
+    path('entity-examples/', views.entity_examples, name='entity_examples'),
+    path('entity-examples-page/', views.entity_examples_page, name='entity_examples_page'),
     path('upload-drugs/', views.upload_drug_list, name='upload_drug_list'),
     path('upload-ades/', views.upload_ade_list, name='upload_ade_list'),
-] 
+]
