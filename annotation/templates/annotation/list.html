@@ -172,9 +172,9 @@
                     </div>
                 </div>
                 <div class="text-display-container" id="text-container">
-                    <div class="text-display" id="text-display" data-annotation-id="{{ annotation.id }}">
-                        {{ annotation.text }}
-                    </div>
+                                    <div class="text-display" id="text-display" data-annotation-id="{{ annotation.id }}" data-original-text="{{ annotation.text }}">
+                    {{ annotation.text }}
+                </div>
                 </div>
             </div>
         </div>
@@ -208,7 +208,7 @@
                         <div class="entity-tags-container" id="current-drugs">
                             {% if annotation.drugs %}
                                 {% for drug in annotation.drugs %}
-                                    <span class="entity-tag-compact drug-tag" onclick="removeEntity('drugs', '{{ drug }}')">
+                                    <span class="entity-tag-compact drug-tag" onclick="removeEntity('drugs', '{{ drug|escapejs }}')">
                                         {{ drug }}
                                         <i class="fas fa-times"></i>
                                     </span>
@@ -245,7 +245,7 @@
                         <div class="entity-tags-container" id="current-events">
                             {% if annotation.adverse_events %}
                                 {% for event in annotation.adverse_events %}
-                                    <span class="entity-tag-compact adverse-event-tag" onclick="removeEntity('adverse_events', '{{ event }}')">
+                                    <span class="entity-tag-compact adverse-event-tag" onclick="removeEntity('adverse_events', '{{ event|escapejs }}')">
                                         {{ event }}
                                         <i class="fas fa-times"></i>
                                     </span>
@@ -722,8 +722,23 @@ let selectedEntity = '';
 let isFullscreen = false;
 let selectedTextPosition = null; // Store position of selected text
 
+// Decode HTML entities
+function decodeHtmlEntities(text) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    return textarea.value;
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Ensure original text is properly stored and escaped
+    const textDisplay = document.getElementById('text-display');
+    if (textDisplay) {
+        const originalText = textDisplay.getAttribute('data-original-text') || textDisplay.textContent || textDisplay.innerText;
+        // Store the original text without HTML entities
+        textDisplay.setAttribute('data-original-text', originalText);
+    }
+    
     highlightEntities();
     setupTextSelection();
     setupGoogleSearchSelection();
@@ -857,7 +872,7 @@ function setupTextSelection() {
                     return;
                 }
                 
-                // For regular text selection - capture position
+                // For regular text selection - capture position using a more reliable method
                 selectedText = selected;
                 selectedTextPosition = getTextPosition(range, textDisplay);
                 showSelectionPopup(e.pageX, e.pageY);
@@ -867,43 +882,290 @@ function setupTextSelection() {
     });
 }
 
+// Enhanced highlighting function with position-based entity support
+function highlightEntities() {
+    const textDisplay = document.getElementById('text-display');
+    if (!textDisplay) return;
+    
+    // Get the original text before any highlighting
+    let originalText = textDisplay.getAttribute('data-original-text') || textDisplay.textContent || textDisplay.innerText;
+    
+    // Decode HTML entities if present
+    originalText = decodeHtmlEntities(originalText);
+    
+    // Store original text if not already stored
+    if (!textDisplay.getAttribute('data-original-text')) {
+        textDisplay.setAttribute('data-original-text', originalText);
+    }
+    
+
+    
+    let text = originalText;
+    const allEntities = [];
+    
+    // Process entities and normalize to consistent format
+    currentDrugs.forEach(drug => {
+        if (typeof drug === 'string') {
+            // Convert string entities to object format with position
+            const positions = findAllOccurrences(text, drug);
+            positions.forEach(pos => {
+                allEntities.push({
+                    text: drug,
+                    type: 'drug',
+                    start: pos.start,
+                    end: pos.end
+                });
+            });
+        } else if (drug.text && drug.position) {
+            // Use position-based entity
+            allEntities.push({
+                text: drug.text,
+                type: 'drug',
+                start: drug.position.start,
+                end: drug.position.end
+            });
+        }
+    });
+    
+    currentEvents.forEach(event => {
+        if (typeof event === 'string') {
+            // Convert string entities to object format with position
+            const positions = findAllOccurrences(text, event);
+            positions.forEach(pos => {
+                allEntities.push({
+                    text: event,
+                    type: 'adverse-event',
+                    start: pos.start,
+                    end: pos.end
+                });
+            });
+        } else if (event.text && event.position) {
+            // Use position-based entity
+            allEntities.push({
+                text: event.text,
+                type: 'adverse-event',
+                start: event.position.start,
+                end: event.position.end
+            });
+        }
+    });
+    
+    // Sort entities by start position (earliest first) and remove overlaps
+    // Prioritize position-based entities over string-based ones
+    allEntities.sort((a, b) => {
+        if (a.start !== b.start) {
+            return a.start - b.start;
+        }
+        // If same start position, prioritize position-based entities
+        const aHasPosition = a.start !== undefined && a.end !== undefined;
+        const bHasPosition = b.start !== undefined && b.end !== undefined;
+        if (aHasPosition && !bHasPosition) return -1;
+        if (!aHasPosition && bHasPosition) return 1;
+        return 0;
+    });
+    const nonOverlappingEntities = removeOverlappingEntities(allEntities);
+    
+
+    
+    // Apply highlighting from end to start to maintain positions
+    nonOverlappingEntities.sort((a, b) => b.start - a.start);
+    
+    nonOverlappingEntities.forEach(entity => {
+        const beforeText = text.substring(0, entity.start);
+        const entityText = text.substring(entity.start, entity.end);
+        const afterText = text.substring(entity.end);
+        
+        // Escape special characters in entity text for HTML attributes
+        const escapedEntityText = entity.text.replace(/"/g, '&quot;');
+        
+        text = beforeText + 
+               `<span class="highlight-${entity.type}" data-entity="${escapedEntityText}" data-start="${entity.start}" data-end="${entity.end}">${entityText}</span>` + 
+               afterText;
+    });
+    
+    textDisplay.innerHTML = text;
+    
+    // Get highlighted elements for click handlers
+    const highlightedElements = textDisplay.querySelectorAll('.highlight-adverse-event, .highlight-drug');
+    
+    // Add click handlers and enable text selection within highlighted entities
+    setTimeout(() => {
+        highlightedElements.forEach(el => {
+            if (!el) return;
+            
+            // Add click handler for the full entity
+            el.addEventListener('click', function(event) {
+                const entityText = this.getAttribute('data-entity');
+                const entityType = this.classList.contains('highlight-drug') ? 'drug' : 'adverse-event';
+                showEntityPopup(entityText, entityType, event);
+            });
+            
+            // Enable text selection within highlighted entities
+            el.style.userSelect = 'text';
+            el.style.cursor = 'pointer';
+            
+            // Explicitly disable hover effects
+            el.style.transition = 'none';
+            el.addEventListener('mouseenter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            el.addEventListener('mouseover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+    }, 100);
+}
+
+// Find all occurrences of a text in the original text
+function findAllOccurrences(text, searchText) {
+    const positions = [];
+    let startIndex = 0;
+    
+    // Handle edge cases
+    if (!text || !searchText || text.trim() === '' || searchText.trim() === '') {
+        return positions;
+    }
+    
+    while (true) {
+        const index = text.toLowerCase().indexOf(searchText.toLowerCase(), startIndex);
+        if (index === -1) break;
+        
+        positions.push({
+            start: index,
+            end: index + searchText.length
+        });
+        
+        startIndex = index + 1;
+    }
+    
+    return positions;
+}
+
+// Remove overlapping entities, keeping the longer ones and prioritizing position-based entities
+function removeOverlappingEntities(entities) {
+    if (entities.length <= 1) return entities;
+    
+    const result = [];
+    let current = entities[0];
+    
+    for (let i = 1; i < entities.length; i++) {
+        const next = entities[i];
+        
+        // Check if entities overlap
+        if (current.end > next.start) {
+            // Overlap detected - prioritize position-based entities, then longer ones
+            const currentHasPosition = current.start !== undefined && current.end !== undefined;
+            const nextHasPosition = next.start !== undefined && next.end !== undefined;
+            
+            // If one has position and the other doesn't, keep the one with position
+            if (currentHasPosition && !nextHasPosition) {
+                // Keep current, skip next
+                continue;
+            } else if (!currentHasPosition && nextHasPosition) {
+                // Replace current with next
+                current = next;
+                continue;
+            }
+            
+            // If both have position or both don't, keep the longer one
+            const currentLength = current.end - current.start;
+            const nextLength = next.end - next.start;
+            
+            if (nextLength > currentLength) {
+                current = next;
+            }
+        } else {
+            // No overlap - add current to result and move to next
+            result.push(current);
+            current = next;
+        }
+    }
+    
+    // Add the last entity
+    result.push(current);
+    
+    return result;
+}
+
 // Get the position of selected text in the original text
 function getTextPosition(range, textDisplay) {
-    const text = textDisplay.textContent || textDisplay.innerText;
-    const startContainer = range.startContainer;
-    const endContainer = range.endContainer;
+    let originalText = textDisplay.getAttribute('data-original-text') || textDisplay.textContent || textDisplay.innerText;
+    originalText = decodeHtmlEntities(originalText);
     
-    // Calculate start offset
-    let startOffset = range.startOffset;
-    if (startContainer.nodeType === Node.TEXT_NODE) {
-        // Walk through previous text nodes to get absolute position
-        let currentNode = startContainer;
-        while (currentNode.previousSibling) {
-            currentNode = currentNode.previousSibling;
-            if (currentNode.nodeType === Node.TEXT_NODE) {
-                startOffset += currentNode.textContent.length;
-            } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
-                startOffset += currentNode.textContent.length;
+    // Get the selected text
+    const selectedText = range.toString();
+    
+    // Calculate the actual position by walking through the DOM
+    let startOffset = 0;
+    let found = false;
+    
+    // Create a range that covers the entire text display
+    const fullRange = document.createRange();
+    fullRange.selectNodeContents(textDisplay);
+    
+    // Create a range for the selection
+    const selectionRange = range.cloneRange();
+    
+    // Compare the ranges to find the position
+    if (selectionRange.compareBoundaryPoints(Range.START_TO_START, fullRange) >= 0) {
+        // The selection starts after or at the beginning of the text display
+        
+        // Walk through all text nodes to find the exact position
+        const walker = document.createTreeWalker(
+            textDisplay,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+        
+        let currentNode;
+        while (currentNode = walker.nextNode()) {
+            if (currentNode === range.startContainer) {
+                startOffset += range.startOffset;
+                found = true;
+                break;
             }
+            startOffset += currentNode.textContent.length;
         }
     }
     
-    // Calculate end offset
-    let endOffset = range.endOffset;
-    if (endContainer.nodeType === Node.TEXT_NODE) {
-        // Walk through previous text nodes to get absolute position
-        let currentNode = endContainer;
-        while (currentNode.previousSibling) {
-            currentNode = currentNode.previousSibling;
-            if (currentNode.nodeType === Node.TEXT_NODE) {
-                endOffset += currentNode.textContent.length;
-            } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
-                endOffset += currentNode.textContent.length;
-            }
+    // If we couldn't find the position through DOM walking, use a fallback
+    if (!found) {
+        // Find all occurrences of the selected text
+        const occurrences = [];
+        let startIndex = 0;
+        while (true) {
+            const index = originalText.toLowerCase().indexOf(selectedText.toLowerCase(), startIndex);
+            if (index === -1) break;
+            occurrences.push(index);
+            startIndex = index + 1;
+        }
+        
+        if (occurrences.length === 0) {
+            return {
+                start: 0,
+                end: selectedText.length,
+                text: selectedText
+            };
+        }
+        
+        // If there's only one occurrence, use it
+        if (occurrences.length === 1) {
+            startOffset = occurrences[0];
+        } else {
+            // For multiple occurrences, use the first one for now
+            // In a more sophisticated implementation, we could use mouse position or context
+            startOffset = occurrences[0];
         }
     }
     
-    return { start: startOffset, end: endOffset, text: selectedText };
+    return {
+        start: startOffset,
+        end: startOffset + selectedText.length,
+        text: selectedText
+    };
 }
 
 // Show selection popup
@@ -1021,29 +1283,23 @@ function addSelectedEntity(type) {
     
     const currentList = type === 'drugs' ? currentDrugs : currentEvents;
     
-    // Check if this exact text at this position is already added
+    // Check if this exact text is already added (case-insensitive)
     const existingEntity = currentList.find(entity => {
-        if (typeof entity === 'string') {
-            return entity === selectedText;
-        } else {
-            return entity.text === selectedText && 
-                   entity.position && 
-                   entity.position.start === selectedTextPosition.start &&
-                   entity.position.end === selectedTextPosition.end;
-        }
+        const entityText = typeof entity === 'string' ? entity : entity.text;
+        return entityText.toLowerCase() === selectedText.toLowerCase();
     });
     
     if (existingEntity) {
-        alert(`"${selectedText}" is already added at this position.`);
+        alert(`"${selectedText}" is already added.`);
         hideSelectionPopup();
         return;
     }
     
-    // Store entity with position information
-    const entityData = {
+    // Store entity with position information if available
+    const entityData = selectedTextPosition ? {
         text: selectedText,
         position: selectedTextPosition
-    };
+    } : selectedText;
     
     currentList.push(entityData);
     updateEntityDisplay(type);
@@ -1054,8 +1310,16 @@ function addSelectedEntity(type) {
 
 // Remove selected entity
 function removeSelectedEntity() {
-    const drugIndex = currentDrugs.indexOf(selectedEntity);
-    const eventIndex = currentEvents.indexOf(selectedEntity);
+    // Find the entity to remove (case-insensitive)
+    const drugIndex = currentDrugs.findIndex(entity => {
+        const entityText = typeof entity === 'string' ? entity : entity.text;
+        return entityText.toLowerCase() === selectedEntity.toLowerCase();
+    });
+    
+    const eventIndex = currentEvents.findIndex(entity => {
+        const entityText = typeof entity === 'string' ? entity : entity.text;
+        return entityText.toLowerCase() === selectedEntity.toLowerCase();
+    });
     
     if (drugIndex > -1) {
         currentDrugs.splice(drugIndex, 1);
@@ -1079,7 +1343,14 @@ function addEntity(type) {
     if (!entityName) return;
     
     const currentList = type === 'drugs' ? currentDrugs : currentEvents;
-    if (currentList.includes(entityName)) {
+    
+    // Check if entity already exists (case-insensitive)
+    const existingEntity = currentList.find(entity => {
+        const entityText = typeof entity === 'string' ? entity : entity.text;
+        return entityText.toLowerCase() === entityName.toLowerCase();
+    });
+    
+    if (existingEntity) {
         alert(`"${entityName}" is already added.`);
         return;
     }
@@ -1099,11 +1370,8 @@ function removeEntity(type, entityName) {
     
     // Find the entity to remove (handle both string and object formats)
     const index = currentList.findIndex(entity => {
-        if (typeof entity === 'string') {
-            return entity === entityName;
-        } else {
-            return entity.text === entityName;
-        }
+        const entityText = typeof entity === 'string' ? entity : entity.text;
+        return entityText.toLowerCase() === entityName.toLowerCase();
     });
     
     if (index > -1) {
@@ -1137,7 +1405,7 @@ function updateEntityDisplay(type) {
                 // Handle both string and object formats
                 const entityText = typeof entity === 'string' ? entity : entity.text;
                 tag.innerHTML = `${entityText} <i class="fas fa-times"></i>`;
-                tag.onclick = () => removeEntity(type, entity);
+                tag.onclick = () => removeEntity(type, entityText);
                 container.appendChild(tag);
             });
         }
@@ -1169,8 +1437,23 @@ function saveAnnotation(silent = false, validated = false) {
     const annotationId = document.getElementById('text-display').getAttribute('data-annotation-id');
     
     // Convert entities to simple text arrays for saving
-    const drugsText = currentDrugs.map(drug => typeof drug === 'string' ? drug : drug.text);
-    const eventsText = currentEvents.map(event => typeof event === 'string' ? event : event.text);
+    const drugsText = currentDrugs.map(drug => {
+        if (typeof drug === 'string') {
+            return drug;
+        } else if (drug.text) {
+            return drug.text;
+        }
+        return '';
+    }).filter(drug => drug);
+    
+    const eventsText = currentEvents.map(event => {
+        if (typeof event === 'string') {
+            return event;
+        } else if (event.text) {
+            return event.text;
+        }
+        return '';
+    }).filter(event => event);
     
     const formData = new FormData();
     formData.append('drugs', drugsText.join(','));
@@ -1306,130 +1589,6 @@ function jumpToNoteInput() {
     }
 }
 
-// Enhanced highlighting function with position-based entity support
-function highlightEntities() {
-    const textDisplay = document.getElementById('text-display');
-    if (!textDisplay) return;
-    
-    let text = textDisplay.textContent || textDisplay.innerText;
-    const allEntities = [];
-    
-    // Process entities with position information
-    currentDrugs.forEach(drug => {
-        if (typeof drug === 'string') {
-            // Legacy support for string-only entities
-            allEntities.push({text: drug, type: 'drug', position: null});
-        } else {
-            // New format with position information
-            allEntities.push({text: drug.text, type: 'drug', position: drug.position});
-        }
-    });
-    
-    currentEvents.forEach(event => {
-        if (typeof event === 'string') {
-            // Legacy support for string-only entities
-            allEntities.push({text: event, type: 'adverse-event', position: null});
-        } else {
-            // New format with position information
-            allEntities.push({text: event.text, type: 'adverse-event', position: event.position});
-        }
-    });
-    
-    // Sort by position (earliest first) for proper highlighting
-    allEntities.sort((a, b) => {
-        if (a.position && b.position) {
-            return a.position.start - b.position.start;
-        }
-        return 0;
-    });
-    
-    // Create a map to track which parts of text are already highlighted
-    const highlightedRanges = new Map();
-    
-    allEntities.forEach(entity => {
-        if (entity.position) {
-            // Highlight specific position
-            const start = entity.position.start;
-            const end = entity.position.end;
-            const entityText = text.substring(start, end);
-            
-            // Check if this range is already highlighted
-            const rangeKey = `${start}-${end}`;
-            if (highlightedRanges.has(rangeKey)) return;
-            
-            // Verify the text at this position matches the entity
-            if (entityText.toLowerCase() === entity.text.toLowerCase()) {
-                highlightedRanges.set(rangeKey, {
-                    text: entityText,
-                    type: entity.type,
-                    fullEntity: entity.text
-                });
-                
-                // Replace the specific text at this position
-                const beforeText = text.substring(0, start);
-                const afterText = text.substring(end);
-                text = beforeText + 
-                       `<span class="highlight-${entity.type}" data-entity="${entity.text}" data-start="${start}" data-end="${end}">${entityText}</span>` + 
-                       afterText;
-            }
-        } else {
-            // Legacy: highlight all instances (for backward compatibility)
-            const escapedText = entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`(${escapedText})`, 'gi');
-            
-            text = text.replace(regex, function(match, p1, offset, string) {
-                const beforeMatch = string.substring(0, offset);
-                const openTags = (beforeMatch.match(/<[^>]*$/g) || []).length;
-                const closeTags = (beforeMatch.match(/>[^<]*$/g) || []).length;
-                if (openTags > closeTags) return match;
-                
-                const rangeKey = `${offset}-${offset + match.length}`;
-                if (highlightedRanges.has(rangeKey)) return match;
-                
-                highlightedRanges.set(rangeKey, {
-                    text: match,
-                    type: entity.type,
-                    fullEntity: entity.text
-                });
-                
-                return `<span class="highlight-${entity.type}" data-entity="${entity.text}" data-start="${offset}" data-end="${offset + match.length}">${match}</span>`;
-            });
-        }
-    });
-    
-    textDisplay.innerHTML = text;
-    
-    // Add click handlers and enable text selection within highlighted entities
-    setTimeout(() => {
-        const highlightedElements = textDisplay.querySelectorAll('.highlight-adverse-event, .highlight-drug');
-        highlightedElements.forEach(el => {
-            if (!el) return;
-            
-            // Add click handler for the full entity
-            el.addEventListener('click', function(event) {
-                const entityText = this.getAttribute('data-entity');
-                const entityType = this.classList.contains('highlight-drug') ? 'drug' : 'adverse-event';
-                showEntityPopup(entityText, entityType, event);
-            });
-            
-            // Enable text selection within highlighted entities
-            el.style.userSelect = 'text';
-            el.style.cursor = 'pointer';
-            
-            // Explicitly disable hover effects
-            el.style.transition = 'none';
-            el.addEventListener('mouseenter', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-            el.addEventListener('mouseover', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-        });
-    }, 100);
-}
-
 // Google Search functionality
 function setGoogleSearchInput(text) {
     const searchInput = document.getElementById('google-search-input');
@@ -1467,7 +1626,13 @@ function quickAddEntity(entityName, type) {
     const currentList = type === 'drug' ? currentDrugs : currentEvents;
     const entityType = type === 'drug' ? 'drugs' : 'adverse_events';
     
-    if (currentList.includes(entityName)) {
+    // Check if entity already exists (case-insensitive)
+    const existingEntity = currentList.find(entity => {
+        const entityText = typeof entity === 'string' ? entity : entity.text;
+        return entityText.toLowerCase() === entityName.toLowerCase();
+    });
+    
+    if (existingEntity) {
         alert(`"${entityName}" is already added.`);
         return;
     }

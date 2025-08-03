@@ -8,7 +8,7 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome for icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
@@ -96,6 +96,8 @@
             --medical-ade: #f43f5e;
             --medical-ade-light: #fb7185;
             --medical-ade-dark: #e11d48;
+            --medical-red: #f43f5e;
+            --medical-red-dark: #e11d48;
             --medical-purple: #a855f7;
             --medical-purple-light: #c084fc;
             --medical-purple-dark: #9333ea;
@@ -526,9 +528,45 @@
             color: #ff6b35;
             font-weight: bold;
         }
-        
+
         .huggingface-icon:hover {
             color: #f7931e;
+        }
+
+        /* Hugging Face emoji styling */
+        .hf-emoji {
+            font-size: 1.2em;
+            margin: 0 0.2em;
+            display: inline-block;
+            vertical-align: middle;
+            filter: hue-rotate(20deg) saturate(1.2);
+        }
+
+        /* Make emoji smaller in headers */
+        .header-icon .hf-emoji {
+            font-size: 1.8em;
+        }
+
+        /* Custom HF logo using CSS */
+        .hf-custom-icon {
+            display: inline-block;
+            width: 1.2em;
+            height: 1.2em;
+            background: #ff6b35;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 0.2em;
+            vertical-align: middle;
+        }
+
+        .hf-custom-icon::before {
+            content: "🤗";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8em;
+            color: white;
         }
     </style>
 </head>
@@ -554,7 +592,7 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'upload_to_huggingface' %}">
-                            <i class="fab fa-huggingface huggingface-icon"></i> Hugging Face
+                            <span class="hf-emoji">🤗</span> Hugging Face
                         </a></li>
                         <li><a class="dropdown-item" href="{% url 'export_jsonl' %}?filter=validated">
                             <i class="fas fa-check-circle"></i> Export Validated Only

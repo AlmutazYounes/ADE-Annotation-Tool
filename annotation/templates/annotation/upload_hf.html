@@ -8,7 +8,8 @@
     <div class="upload-hf-header">
         <div class="header-content">
             <div class="header-icon">
-                <i class="fab fa-huggingface"></i>
+                <!-- Use emoji as primary since it's more reliable -->
+                <span class="hf-emoji">🤗</span>
             </div>
             <div class="header-text">
                 <h1>Upload to Hugging Face</h1>
@@ -137,7 +138,8 @@
                 <ul>
                     <li><strong>data.jsonl</strong> - Your annotation data in JSONL format</li>
                     <li><strong>dataset_info.json</strong> - Metadata about the dataset</li>
-                    <li><strong>README.md</strong> - Documentation for the dataset</li>
+                    <li><strong>README.md</strong> - Documentation with YAML metadata for Hugging Face</li>
+                    <li><strong>YAML metadata</strong> - Embedded in README for proper dataset card formatting</li>
                     <li><strong>Privacy settings</strong> - Public or private dataset option</li>
                 </ul>
             </div>
@@ -615,6 +617,25 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Uploading...</span>';
         submitBtn.disabled = true;
     });
+});
+
+// Check if Hugging Face icon loaded, if not show emoji fallback
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if Font Awesome Hugging Face icon is available
+    const hfIcon = document.querySelector('.fab.fa-huggingface');
+    const hfEmoji = document.querySelector('.hf-emoji');
+
+    if (hfIcon && hfEmoji) {
+        // Check if the icon has proper styling (indicates it loaded)
+        const iconStyles = window.getComputedStyle(hfIcon);
+        const hasContent = iconStyles.getPropertyValue('content') !== 'none' && iconStyles.getPropertyValue('content') !== '';
+
+        if (!hasContent || iconStyles.fontFamily.indexOf('Font Awesome') === -1) {
+            // Font Awesome icon didn't load properly, show emoji fallback
+            hfIcon.style.display = 'none';
+            hfEmoji.style.display = 'inline';
+        }
+    }
 });
 
 // Test token function

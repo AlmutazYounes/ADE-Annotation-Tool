@@ -1081,21 +1081,40 @@ def export_change_statistics(request):
         return redirect('annotation_stats')
 
 
+def _get_size_category(num_examples):
+    """Helper function to determine Hugging Face size category based on number of examples"""
+    if num_examples < 1000:
+        return "n<1K"
+    elif num_examples < 10000:
+        return "1K<n<10K"
+    elif num_examples < 100000:
+        return "10K<n<100K"
+    elif num_examples < 1000000:
+        return "100K<n<1M"
+    else:
+        return "1M<n<10M"
+
+
 def upload_to_huggingface(request):
     """View to upload dataset to Hugging Face Hub"""
     if request.method == 'POST':
         try:
+            from huggingface_hub import HfApi, create_repo, upload_file
+            from huggingface_hub.utils import RepositoryNotFoundError, HfHubHTTPError
+            import tempfile
+            import os
+
             # Get form data
             hf_token = request.POST.get('hf_token')
             dataset_name = request.POST.get('dataset_name')
             dataset_description = request.POST.get('dataset_description', '')
             is_private = request.POST.get('is_private') == 'on'
             filter_type = request.POST.get('filter_type', 'all')
-            
+
             if not hf_token:
                 messages.error(request, 'Hugging Face token is required!')
                 return redirect('annotation_stats')
-            
+
             if not dataset_name:
                 messages.error(request, 'Dataset name is required!')
                 return redirect('annotation_stats')
@@ -1113,6 +1132,28 @@ def upload_to_huggingface(request):
             else:  # all
                 annotations = TextAnnotation.objects.all()
             
+            # Initialize Hugging Face API client first to get username
+            try:
+                api = HfApi(token=hf_token)
+
+                # Validate token and get user info
+                user_info = api.whoami()
+                username = user_info.get('name', '')
+
+                if not username:
+                    messages.error(request, 'Could not retrieve username from token. Please check your token.')
+                    return redirect('annotation_stats')
+
+            except HfHubHTTPError as e:
+                if e.response.status_code == 401:
+                    messages.error(request, 'Invalid Hugging Face token. Please check your token and try again.')
+                else:
+                    messages.error(request, f'Error validating token: {str(e)}')
+                return redirect('annotation_stats')
+            except Exception as e:
+                messages.error(request, f'Network error while validating token: {str(e)}')
+                return redirect('annotation_stats')
+
             # Prepare dataset data
             dataset_data = []
             for annotation in annotations:
@@ -1126,7 +1167,7 @@ def upload_to_huggingface(request):
                     'updated_at': annotation.updated_at.isoformat() if annotation.updated_at else None,
                 }
                 dataset_data.append(data)
-            
+
             # Create dataset info
             dataset_info = {
                 'dataset_name': dataset_name,
@@ -1139,11 +1180,75 @@ def upload_to_huggingface(request):
                 'unvalidated_count': sum(1 for item in dataset_data if not item['is_validated']),
             }
             
+            # Create YAML metadata for Hugging Face dataset card
+            yaml_metadata = f'''---
+annotations_creators:
+- expert-generated
+language_creators:
+- found
+language:
+- en
+license: mit
+multilinguality:
+- monolingual
+size_categories:
+- {_get_size_category(len(dataset_data))}
+source_datasets:
+- original
+task_categories:
+- token-classification
+- text-classification
+task_ids:
+- named-entity-recognition
+paperswithcode_id: null
+pretty_name: {dataset_name.replace('-', ' ').replace('_', ' ').title()}
+tags:
+- medical
+- pharmacovigilance
+- adverse-drug-events
+- drug-entities
+- biomedical-nlp
+- annotation-tool
+dataset_info:
+  features:
+  - name: id
+    dtype: int64
+  - name: text
+    dtype: string
+  - name: drugs
+    sequence: string
+  - name: adverse_events
+    sequence: string
+  - name: is_validated
+    dtype: bool
+  - name: created_at
+    dtype: string
+  - name: updated_at
+    dtype: string
+  config_name: default
+  data_files:
+  - split: train
+    path: data.jsonl
+  default: true
+  description: {dataset_description or f'Medical text annotation dataset with {len(dataset_data)} examples for adverse drug event detection'}
+  download_size: null
+  dataset_size: {len(dataset_data)}
+configs:
+- config_name: default
+  data_files:
+  - split: train
+    path: data.jsonl
+  default: true
+  description: Default configuration
+---'''
+
             # Prepare files for upload
             files = {
                 'data.jsonl': ('data.jsonl', '\n'.join(json.dumps(item, ensure_ascii=False) for item in dataset_data), 'application/jsonl'),
                 'dataset_info.json': ('dataset_info.json', json.dumps(dataset_info, ensure_ascii=False, indent=2), 'application/json'),
-                'README.md': ('README.md', f'''# {dataset_name}
+                'README.md': ('README.md', f'''{yaml_metadata}
+
+# {dataset_name}
 
 {dataset_description or f'Medical text annotation dataset with {len(dataset_data)} examples'}
 
@@ -1167,111 +1272,87 @@ Each example contains:
 
 ## Usage
 This dataset can be used for training medical text annotation models or for research in pharmacovigilance and medical text analysis.
+
+## Citation
+If you use this dataset in your research, please cite:
+```
+@dataset{{medical_annotation_dataset,
+  title={{{dataset_name.replace('-', ' ').replace('_', ' ').title()}}},
+  author={{Medical Text Annotation Tool}},
+  year={{{datetime.now().year}}},
+  url={{https://huggingface.co/datasets/{username}/{dataset_name}}}
+}}
+```
 ''', 'text/markdown')
             }
             
-            # First, try to get user info to validate token
+            # Create dataset repository
             try:
-                # Debug: Log the token (first few characters only)
-                token_preview = hf_token[:8] + "..." if len(hf_token) > 8 else hf_token
-                print(f"Attempting to validate token: {token_preview}")
-                
-                user_info_response = requests.get(
-                    'https://huggingface.co/api/whoami',
-                    headers={'Authorization': f'Bearer {hf_token}'},
-                    timeout=10
+                repo_id = f"{username}/{dataset_name}"
+                repo_url = create_repo(
+                    repo_id=repo_id,
+                    token=hf_token,
+                    repo_type="dataset",
+                    private=is_private,
+                    exist_ok=True  # Don't fail if repository already exists
                 )
-                
-                print(f"Token validation response status: {user_info_response.status_code}")
-                print(f"Token validation response: {user_info_response.text[:200]}...")
-                
-                if user_info_response.status_code != 200:
-                    error_detail = user_info_response.text
-                    if '401' in str(user_info_response.status_code):
-                        messages.error(request, 'Invalid Hugging Face token. Please check your token and try again.')
-                    else:
-                        messages.error(request, f'Error validating token: {error_detail}')
-                    return redirect('annotation_stats')
-                
-                user_info = user_info_response.json()
-                username = user_info.get('name', '')
-                
-                print(f"Retrieved username: {username}")
-                
-                if not username:
-                    messages.error(request, 'Could not retrieve username from token. Please check your token.')
-                    return redirect('annotation_stats')
-                    
-            except requests.exceptions.RequestException as e:
-                print(f"Network error during token validation: {str(e)}")
-                messages.error(request, f'Network error while validating token: {str(e)}')
-                return redirect('annotation_stats')
-            
-            # Create dataset repository using the correct API endpoint
-            create_url = f'https://huggingface.co/api/repos/create'
-            create_data = {
-                'name': dataset_name,
-                'type': 'dataset',
-                'description': dataset_info['description'],
-                'private': is_private
-            }
-            
-            create_response = requests.post(
-                create_url, 
-                headers={'Authorization': f'Bearer {hf_token}'}, 
-                json=create_data
-            )
-            
-            if create_response.status_code not in [200, 201, 409]:  # 409 means already exists
-                error_msg = create_response.text
-                if 'already exists' in error_msg.lower():
+                print(f"Repository created/exists: {repo_url}")
+
+            except HfHubHTTPError as e:
+                if "already exists" in str(e).lower():
                     messages.error(request, f'Dataset "{dataset_name}" already exists. Please choose a different name.')
                 else:
-                    messages.error(request, f'Failed to create dataset repository: {error_msg}')
+                    messages.error(request, f'Failed to create dataset repository: {str(e)}')
                 return redirect('annotation_stats')
-            
-            # Upload files using the datasets API
-            upload_url = f'https://huggingface.co/api/datasets/{username}/{dataset_name}/upload'
-            
-            # Prepare multipart form data
-            import io
-            from urllib.parse import urlencode
-            
-            # Create a custom multipart encoder
-            boundary = '----WebKitFormBoundary' + ''.join([str(ord(c)) for c in 'abcdefghijklmnop'])
-            
-            body = []
-            for field_name, (filename, content, content_type) in files.items():
-                body.append(f'--{boundary}'.encode())
-                body.append(f'Content-Disposition: form-data; name="{field_name}"; filename="{filename}"'.encode())
-                body.append(f'Content-Type: {content_type}'.encode())
-                body.append(b''.encode())
-                body.append(content.encode('utf-8'))
-                body.append(b'')
-            
-            body.append(f'--{boundary}--'.encode())
-            body.append(b'')
-            
-            upload_headers = {
-                'Authorization': f'Bearer {hf_token}',
-                'Content-Type': f'multipart/form-data; boundary={boundary}'
-            }
-            
-            upload_response = requests.post(
-                upload_url,
-                headers=upload_headers,
-                data=b'\r\n'.join(body)
-            )
-            
-            if upload_response.status_code in [200, 201]:
-                dataset_url = f'https://huggingface.co/datasets/{username}/{dataset_name}'
+            except Exception as e:
+                messages.error(request, f'Error creating repository: {str(e)}')
+                return redirect('annotation_stats')
+
+            # Upload files to the repository
+            try:
+                repo_id = f"{username}/{dataset_name}"
+
+                # Create temporary files and upload them
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    uploaded_files = []
+
+                    for filename, (_, content, _) in files.items():
+                        temp_file_path = os.path.join(temp_dir, filename)
+                        with open(temp_file_path, 'w', encoding='utf-8') as f:
+                            f.write(content)
+
+                        # Upload each file
+                        upload_file(
+                            path_or_fileobj=temp_file_path,
+                            path_in_repo=filename,
+                            repo_id=repo_id,
+                            repo_type="dataset",
+                            token=hf_token,
+                            commit_message=f"Upload {filename}"
+                        )
+                        uploaded_files.append(filename)
+                        print(f"Uploaded {filename} to {repo_id}")
+
+                dataset_url = f'https://huggingface.co/datasets/{repo_id}'
                 privacy_status = 'private' if is_private else 'public'
-                messages.success(request, f'Successfully uploaded {privacy_status} dataset to Hugging Face! View it at: {dataset_url}')
-            else:
-                messages.error(request, f'Failed to upload dataset: {upload_response.text}')
-            
+                messages.success(request,
+                    f'Successfully uploaded {privacy_status} dataset to Hugging Face! '
+                    f'Files uploaded: {", ".join(uploaded_files)}. '
+                    f'View it at: {dataset_url}')
+
+            except HfHubHTTPError as e:
+                messages.error(request, f'Failed to upload files to Hugging Face: {str(e)}')
+                return redirect('annotation_stats')
+            except Exception as e:
+                messages.error(request, f'Error during file upload: {str(e)}')
+                return redirect('annotation_stats')
+
+        except ImportError:
+            messages.error(request, 'Hugging Face Hub library is not installed. Please install it with: pip install huggingface_hub')
+            return redirect('annotation_stats')
         except Exception as e:
-            messages.error(request, f'Error uploading to Hugging Face: {str(e)}')
+            messages.error(request, f'Unexpected error uploading to Hugging Face: {str(e)}')
+            print(f"Full error details: {e}")  # For debugging
         
         return redirect('annotation_stats')
     
@@ -1285,28 +1366,44 @@ def test_hf_token(request):
         hf_token = request.POST.get('hf_token')
         if not hf_token:
             return JsonResponse({'success': False, 'error': 'No token provided'})
-        
+
         try:
-            # Test the token
-            response = requests.get(
-                'https://huggingface.co/api/whoami',
-                headers={'Authorization': f'Bearer {hf_token}'},
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                user_info = response.json()
-                username = user_info.get('name', '')
+            from huggingface_hub import HfApi
+            from huggingface_hub.utils import HfHubHTTPError
+
+            # Test the token using HfApi
+            api = HfApi(token=hf_token)
+            user_info = api.whoami()
+            username = user_info.get('name', '')
+
+            if username:
                 return JsonResponse({
-                    'success': True, 
+                    'success': True,
                     'username': username,
                     'message': f'Token is valid for user: {username}'
                 })
             else:
                 return JsonResponse({
-                    'success': False, 
-                    'error': f'Token validation failed: {response.status_code} - {response.text}'
+                    'success': False,
+                    'error': 'Could not retrieve username from token'
                 })
+
+        except HfHubHTTPError as e:
+            if e.response.status_code == 401:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid token. Please check your Hugging Face token.'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Token validation failed: {str(e)}'
+                })
+        except ImportError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Hugging Face Hub library is not installed'
+            })
                 
         except Exception as e:
             return JsonResponse({

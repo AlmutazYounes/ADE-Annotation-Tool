@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Highlighting Test</title>
+    <style>
+        .highlight-drug {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: none !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .highlight-adverse-event {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: none !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .text-display {
+            padding: 20px;
+            line-height: 1.8;
+            font-size: 1rem;
+            color: #333;
+            text-align: justify;
+            word-wrap: break-word;
+            hyphens: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="text-display" id="text-display" data-original-text="The patient was prescribed aspirin for pain relief. However, they experienced nausea and headache as adverse events. The doctor then switched to ibuprofen which also caused stomach upset.">
+        The patient was prescribed aspirin for pain relief. However, they experienced nausea and headache as adverse events. The doctor then switched to ibuprofen which also caused stomach upset.
+    </div>
+    
+    <div style="margin: 20px;">
+        <h3>Test Controls:</h3>
+        <button onclick="testHighlighting()">Test Highlighting</button>
+        <button onclick="clearHighlighting()">Clear Highlighting</button>
+        <button onclick="addTestEntities()">Add Test Entities</button>
+    </div>
+    
+    <div id="output" style="margin: 20px; padding: 10px; background: #f5f5f5; border-radius: 4px;"></div>
+
+    <script>
+        // Test data
+        let currentDrugs = ['aspirin', 'ibuprofen'];
+        let currentEvents = ['nausea', 'headache', 'stomach upset'];
+        
+        // Decode HTML entities
+        function decodeHtmlEntities(text) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = text;
+            return textarea.value;
+        }
+        
+        // Find all occurrences of a text in the original text
+        function findAllOccurrences(text, searchText) {
+            const positions = [];
+            let startIndex = 0;
+            
+            // Handle edge cases
+            if (!text || !searchText || text.trim() === '' || searchText.trim() === '') {
+                return positions;
+            }
+            
+            while (true) {
+                const index = text.toLowerCase().indexOf(searchText.toLowerCase(), startIndex);
+                if (index === -1) break;
+                
+                positions.push({
+                    start: index,
+                    end: index + searchText.length
+                });
+                
+                startIndex = index + 1;
+            }
+            
+            return positions;
+        }
+        
+        // Remove overlapping entities, keeping the longer ones
+        function removeOverlappingEntities(entities) {
+            if (entities.length <= 1) return entities;
+            
+            const result = [];
+            let current = entities[0];
+            
+            for (let i = 1; i < entities.length; i++) {
+                const next = entities[i];
+                
+                // Check if entities overlap
+                if (current.end > next.start) {
+                    // Overlap detected - keep the longer entity
+                    const currentLength = current.end - current.start;
+                    const nextLength = next.end - next.start;
+                    
+                    if (nextLength > currentLength) {
+                        current = next;
+                    }
+                } else {
+                    // No overlap - add current to result and move to next
+                    result.push(current);
+                    current = next;
+                }
+            }
+            
+            // Add the last entity
+            result.push(current);
+            
+            return result;
+        }
+        
+        // Enhanced highlighting function
+        function highlightEntities() {
+            const textDisplay = document.getElementById('text-display');
+            if (!textDisplay) return;
+            
+            // Get the original text before any highlighting
+            let originalText = textDisplay.getAttribute('data-original-text') || textDisplay.textContent || textDisplay.innerText;
+            
+            // Decode HTML entities if present
+            originalText = decodeHtmlEntities(originalText);
+            
+            // Store original text if not already stored
+            if (!textDisplay.getAttribute('data-original-text')) {
+                textDisplay.setAttribute('data-original-text', originalText);
+            }
+            
+            console.log('Highlighting entities:', {
+                currentDrugs: currentDrugs,
+                currentEvents: currentEvents,
+                originalTextLength: originalText.length
+            });
+            
+            let text = originalText;
+            const allEntities = [];
+            
+            // Process entities and normalize to consistent format
+            currentDrugs.forEach(drug => {
+                if (typeof drug === 'string') {
+                    // Convert string entities to object format with position
+                    const positions = findAllOccurrences(text, drug);
+                    positions.forEach(pos => {
+                        allEntities.push({
+                            text: drug,
+                            type: 'drug',
+                            start: pos.start,
+                            end: pos.end
+                        });
+                    });
+                } else if (drug.text && drug.position) {
+                    // Use position-based entity
+                    allEntities.push({
+                        text: drug.text,
+                        type: 'drug',
+                        start: drug.position.start,
+                        end: drug.position.end
+                    });
+                }
+            });
+            
+            currentEvents.forEach(event => {
+                if (typeof event === 'string') {
+                    // Convert string entities to object format with position
+                    const positions = findAllOccurrences(text, event);
+                    positions.forEach(pos => {
+                        allEntities.push({
+                            text: event,
+                            type: 'adverse-event',
+                            start: pos.start,
+                            end: pos.end
+                        });
+                    });
+                } else if (event.text && event.position) {
+                    // Use position-based entity
+                    allEntities.push({
+                        text: event.text,
+                        type: 'adverse-event',
+                        start: event.position.start,
+                        end: event.position.end
+                    });
+                }
+            });
+            
+            // Sort entities by start position (earliest first) and remove overlaps
+            allEntities.sort((a, b) => a.start - b.start);
+            const nonOverlappingEntities = removeOverlappingEntities(allEntities);
+            
+            console.log('Processed entities:', {
+                allEntities: allEntities,
+                nonOverlappingEntities: nonOverlappingEntities
+            });
+            
+            // Apply highlighting from end to start to maintain positions
+            nonOverlappingEntities.sort((a, b) => b.start - a.start);
+            
+            nonOverlappingEntities.forEach(entity => {
+                const beforeText = text.substring(0, entity.start);
+                const entityText = text.substring(entity.start, entity.end);
+                const afterText = text.substring(entity.end);
+                
+                // Escape special characters in entity text for HTML attributes
+                const escapedEntityText = entity.text.replace(/"/g, '&quot;');
+                
+                text = beforeText + 
+                       `<span class="highlight-${entity.type}" data-entity="${escapedEntityText}" data-start="${entity.start}" data-end="${entity.end}">${entityText}</span>` + 
+                       afterText;
+            });
+            
+            textDisplay.innerHTML = text;
+            
+            // Validate highlighting results
+            const highlightedElements = textDisplay.querySelectorAll('.highlight-adverse-event, .highlight-drug');
+            console.log('Highlighting complete:', {
+                totalHighlighted: highlightedElements.length,
+                highlightedElements: Array.from(highlightedElements).map(el => ({
+                    text: el.textContent,
+                    entity: el.getAttribute('data-entity'),
+                    type: el.classList.contains('highlight-drug') ? 'drug' : 'adverse-event'
+                }))
+            });
+            
+            // Update output
+            document.getElementById('output').innerHTML = `
+                <h4>Highlighting Results:</h4>
+                <p><strong>Total highlighted:</strong> ${highlightedElements.length}</p>
+                <p><strong>Drugs:</strong> ${currentDrugs.join(', ')}</p>
+                <p><strong>Events:</strong> ${currentEvents.join(', ')}</p>
+                <p><strong>Highlighted elements:</strong></p>
+                <ul>
+                    ${Array.from(highlightedElements).map(el => 
+                        `<li>${el.textContent} (${el.classList.contains('highlight-drug') ? 'drug' : 'adverse-event'})</li>`
+                    ).join('')}
+                </ul>
+            `;
+        }
+        
+        function testHighlighting() {
+            highlightEntities();
+        }
+        
+        function clearHighlighting() {
+            const textDisplay = document.getElementById('text-display');
+            const originalText = textDisplay.getAttribute('data-original-text');
+            textDisplay.innerHTML = originalText;
+            document.getElementById('output').innerHTML = '<p>Highlighting cleared</p>';
+        }
+        
+        function addTestEntities() {
+            currentDrugs = ['aspirin', 'ibuprofen', 'acetaminophen'];
+            currentEvents = ['nausea', 'headache', 'stomach upset', 'dizziness'];
+            highlightEntities();
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            highlightEntities();
+        });
+    </script>
+</body>
+</html> 
